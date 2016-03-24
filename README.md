@@ -13,7 +13,7 @@ If you want to customize the app for your own needs, you can do a custom build.
 
         $ npm install
 
-  3. To run the app:
+  3. To run the app (you can install gulp using `npm install --global gulp-cli`):
 
         $ gulp
 
