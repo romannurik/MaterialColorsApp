@@ -1,0 +1,7 @@
+_sandbox
+.tmp
+.electron-cache
+node_modules
+dist
+build
+.DS_Store

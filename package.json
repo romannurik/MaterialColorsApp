@@ -1,0 +1,29 @@
+{
+  "name": "material-colors",
+  "appDisplayName": "Material Colors",
+  "productName": "Material Colors",
+  "appBundleId": "net.nurik.roman.materialcolors",
+  "version": "1.0.1",
+  "description": "A quick color palette for material design colors.",
+  "main": "main.js",
+  "author": "Roman Nurik",
+  "private": true,
+  "devDependencies": {
+    "del": "^2.2.0",
+    "electron-osx-sign": "^0.3.0",
+    "electron-packager": "^5.2.1",
+    "electron-prebuilt": "^0.37.1",
+    "gulp": "^3.9.1",
+    "gulp-cache": "^0.4.2",
+    "gulp-load-plugins": "^1.2.0",
+    "gulp-plist": "^0.1.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^2.2.0",
+    "gulp-shell": "^0.5.2",
+    "merge-stream": "^1.0.0",
+    "run-sequence": "^1.1.5"
+  },
+  "dependencies": {
+    "yargs": "^4.2.0"
+  }
+}
