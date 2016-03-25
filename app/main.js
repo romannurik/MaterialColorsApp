@@ -52,6 +52,8 @@ app.on('ready', () => {
 
   mainWindow['hide']();
   mainWindow.loadURL(`file://${__dirname}/index.html`);
+
+  mainWindow.on('blur', () => mainWindow.hide());
   mainWindow.on('closed', () => mainWindow = null);
 
   mainWindowPositioner = new positioner(mainWindow);
