@@ -95,10 +95,12 @@ function updateUiMode() {
   }
 
   // Build or teardown dock
-  if (!isTrayMode) {
-    app.dock.show();
-  } else {
-    app.dock.hide();
+  if (app.dock) {
+    if (!isTrayMode) {
+      app.dock.show();
+    } else {
+      app.dock.hide();
+    }
   }
 
   // Update menu
