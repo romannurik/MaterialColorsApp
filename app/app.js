@@ -16,7 +16,7 @@
 
 'use strict';
 
-const $ = require('./jquery.min.js');
+const $ = require('jquery');
 const electron = require('electron');
 const colors = require('./colors.js');
 
