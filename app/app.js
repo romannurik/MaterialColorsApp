@@ -118,7 +118,7 @@ class MaterialColors {
 
       let $value = $('<div>')
           .addClass(this.CLASS_NAMES.value)
-          .toggleClass('is-white', !!color[value].white)
+          .toggleClass(this.CLASS_NAMES.isWhite, !!color[value].white)
           .css('background-color', color[value].color)
           .appendTo(this.$values);
 
