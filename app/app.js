@@ -18,115 +18,128 @@
 
 const $ = require('./jquery.min.js');
 const electron = require('electron');
-const colors = require('./colors.js');
-
-var $hues;
-var $values;
 
 
-function init() {
-  buildUi();
-  $('.close-button').click(() => {
-    electron.remote.getCurrentWindow().hide();
-    electron.ipcRenderer.send('update-ui-mode');
-  });
+class MaterialColors {
+  constructor() {
+    this.$hues = null;
+    this.$values = null;
 
-  electron.ipcRenderer.on('update-downloaded', (event, releaseName) => {
-    $('<div>')
-        .addClass('update-banner')
-        .text(`Install v${releaseName}`)
-        .click(() => electron.ipcRenderer.send('install-update'))
-        .appendTo('body');
-  });
-}
+    this.COLORS = require('./colors.js');
+    this.CLASS_NAMES = {
+      hues: 'hues',
+      hue: 'hue',
+      hueIcon: 'hue-icon',
+      hueIconSelector: 'hue-icon-selector',
+      hueLabel: 'hue-label',
+      values: 'values',
+      valueHeading: 'value-heading',
+      value: 'value',
+      valueName: 'value-name',
+      valueHex: 'value-hex',
+      closeButton: 'close-button',
+      updateBanner: 'update-banner',
+      isSelected: 'is-selected',
+      isWhite: 'is-white'
+    };
 
-
-function displayLabelForHue(hue) {
-  return hue.split('-')
-      .map(s => s.charAt(0).toUpperCase() + s.substring(1))
-      .join(' ');
-}
-
-
-function selectHue(hue) {
-  $('.hue').removeClass('is-selected');
-  $(`.hue-${hue}`).addClass('is-selected');
-
-  // build values
-
-  $values.empty();
-
-  $('<div>')
-      .addClass('value-heading')
-      .text(displayLabelForHue(hue))
-      .appendTo($values);
-
-  for (let value in colors[hue]) {
-    let $value = $('<div>')
-        .addClass('value')
-        .toggleClass('is-white', !!colors[hue][value].white)
-        .css({
-          backgroundColor: colors[hue][value].color
-        })
-        .appendTo($values);
-
-    $('<div>')
-        .addClass('value-name')
-        .text(value.toUpperCase())
-        .appendTo($value);
-
-    $('<div>')
-        .addClass('value-hex')
-        .text(colors[hue][value].color.toUpperCase())
-        .click(() => electron.clipboard.writeText(colors[hue][value].color.toUpperCase()))
-        .appendTo($value);
+    this._init();
   }
-}
 
+  _init() {
+    this.$hues = $(`.${this.CLASS_NAMES.hues}`);
+    this.$values = $(`.${this.CLASS_NAMES.values}`);
 
-function buildUi() {
-  $hues = $('<div>')
-      .addClass('hues')
-      .appendTo('body');
+    this._buildUi();
 
-  let firstHue;
-  for (let hue in colors) {
-    if (!firstHue) {
-      firstHue = hue;
+    $(`.${this.CLASS_NAMES.closeButton}`).click(() => {
+      electron.remote.getCurrentWindow().hide();
+      electron.ipcRenderer.send('update-ui-mode');
+    });
+
+    electron.ipcRenderer.on('update-downloaded', (event, releaseName) => {
+      $('<div>')
+          .addClass(this.CLASS_NAMES.updateBanner)
+          .text(`Install v${releaseName}`)
+          .click(() => electron.ipcRenderer.send('install-update'))
+          .appendTo('body');
+    });
+  }
+
+  _buildUi() {
+    let firstHue;
+    for (let hue in this.COLORS) {
+      let color = this.COLORS[hue];
+      if (!firstHue) {
+        firstHue = hue;
+      }
+
+      let $hue = $('<div>')
+          .addClass(`${this.CLASS_NAMES.hue} ${this.CLASS_NAMES.hue}-${hue}`)
+          .click(() => this._selectHue(hue))
+          .appendTo(this.$hues);
+
+      let $hueIcon = $('<div>')
+          .addClass(this.CLASS_NAMES.hueIcon)
+          .css('background-color', color['500'].color)
+          .appendTo($hue);
+
+      $('<div>')
+          .addClass(this.CLASS_NAMES.hueIconSelector)
+          .css('background-color', color['700'].color)
+          .appendTo($hueIcon);
+
+      $('<div>')
+          .addClass(this.CLASS_NAMES.hueLabel)
+          .text(this._getDisplayLabelForHue(hue))
+          .appendTo($hue);
     }
 
-    let $hue = $('<div>')
-        .addClass('hue')
-        .addClass('hue-' + hue)
-        .click(() => selectHue(hue))
-        .appendTo($hues);
-
-    let $hueIcon = $('<div>')
-        .addClass('hue-icon')
-        .css({
-          backgroundColor: colors[hue]['500'].color
-        })
-        .appendTo($hue);
-
-    $('<div>')
-        .addClass('hue-icon-selector')
-        .css({
-          backgroundColor: colors[hue]['700'].color
-        })
-        .appendTo($hueIcon);
-
-    $('<div>')
-        .addClass('hue-label')
-        .text(displayLabelForHue(hue))
-        .appendTo($hue);
+    this._selectHue(firstHue);
   }
 
-  $values = $('<div>')
-      .addClass('values')
-      .appendTo('body');
+  _selectHue(hue) {
+    // Toggle selected hue
+    this.$hues.find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
+        .removeClass(this.CLASS_NAMES.isSelected);
+    this.$hues.find(`.${this.CLASS_NAMES.hue}-${hue}`)
+        .addClass(this.CLASS_NAMES.isSelected);
 
-  selectHue(firstHue);
+    // Empty values
+    this.$values.find('*').remove();
+
+    $('<div>')
+        .addClass(this.CLASS_NAMES.valueHeading)
+        .text(this._getDisplayLabelForHue(hue))
+        .appendTo(this.$values);
+
+    for (let value in this.COLORS[hue]) {
+      let color = this.COLORS[hue];
+
+      let $value = $('<div>')
+          .addClass(this.CLASS_NAMES.value)
+          .toggleClass('is-white', !!color[value].white)
+          .css('background-color', color[value].color)
+          .appendTo(this.$values);
+
+      $('<div>')
+          .addClass(this.CLASS_NAMES.valueName)
+          .text(value.toUpperCase())
+          .appendTo($value);
+
+      $('<div>')
+          .addClass(this.CLASS_NAMES.valueHex)
+          .text(color[value].color.toUpperCase())
+          .click(() => electron.clipboard.writeText(color[value].color.toUpperCase()))
+          .appendTo($value);
+    }
+  }
+
+  _getDisplayLabelForHue(hue) {
+    return hue.split('-')
+        .map(s => s.charAt(0).toUpperCase() + s.substring(1))
+        .join(' ');
+  }
 }
 
-
-init();
+new MaterialColors();
