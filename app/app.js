@@ -18,6 +18,9 @@
 
 const $ = require('jquery');
 const electron = require('electron');
+const remote = require('remote');
+const Menu = remote.require('menu');
+const MenuItem = remote.require('menu-item');
 
 
 class MaterialColors {
@@ -125,6 +128,10 @@ class MaterialColors {
       $('<div>')
           .addClass(this.CLASS_NAMES.valueName)
           .text(value.toUpperCase())
+          .contextmenu(event => {
+            event.preventDefault();
+            this._showValueContextMenu(color[value].color);
+          })
           .appendTo($value);
 
       $('<div>')
@@ -133,6 +140,27 @@ class MaterialColors {
           .click(() => electron.clipboard.writeText(color[value].color.toUpperCase()))
           .appendTo($value);
     }
+  }
+
+  _showValueContextMenu(color) {
+    let withHash = color;
+    let noHash = color.replace(/#/g, '');
+    let rgb = `rgb(${
+        parseInt(noHash.substring(0, 2), 16)}, ${
+        parseInt(noHash.substring(2, 4), 16)}, ${
+        parseInt(noHash.substring(4, 6), 16)})`;
+
+    let formats = [];
+    formats.push(withHash);
+    formats.push(noHash);
+    formats.push(rgb);
+
+    let menu = Menu.buildFromTemplate(
+        formats.map(format => ({
+          label: `Copy ${format}`,
+          click: () => electron.clipboard.writeText(format)
+        })));
+    menu.popup(remote.getCurrentWindow());
   }
 
   _getDisplayLabelForHue(hue) {
