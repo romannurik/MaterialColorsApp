@@ -24,6 +24,7 @@
     "run-sequence": "^1.1.5"
   },
   "dependencies": {
+    "jquery": "^2.2.2",
     "yargs": "^4.2.0"
   }
 }
