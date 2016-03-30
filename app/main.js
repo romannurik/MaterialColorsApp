@@ -116,6 +116,7 @@ function updateUiMode() {
     });
   }
 
+  menuItems.push({ type: 'separator' });
   menuItems.push({
     label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
     click: () => {
@@ -124,7 +125,6 @@ function updateUiMode() {
     }
   });
 
-  menuItems.push({ type: 'separator' });
   menuItems.push({ label: 'About ' + app.getName(), role: 'about' });
 
   if (isTrayMode) {
