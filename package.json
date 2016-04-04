@@ -8,6 +8,9 @@
   "main": "main.js",
   "author": "Roman Nurik",
   "private": true,
+  "scripts": {
+    "start": "gulp"
+  },
   "devDependencies": {
     "del": "^2.2.0",
     "electron-osx-sign": "^0.3.0",
@@ -15,6 +18,7 @@
     "electron-prebuilt": "^0.37.1",
     "gulp": "^3.9.1",
     "gulp-cache": "^0.4.2",
+    "gulp-cli": "^1.2.1",
     "gulp-load-plugins": "^1.2.0",
     "gulp-plist": "^0.1.0",
     "gulp-rename": "^1.2.2",
