@@ -15,9 +15,9 @@ If you want to customize the app for your own needs, you can do a custom build.
 
         $ npm install
 
-  3. To run the app (you can install gulp using `npm install --global gulp-cli`):
+  3. To run the app:
 
-        $ gulp
+        $ npm start
 
 Note that you'll probably want to disable the auto-updating mechanism by emptying out the `checkForUpdates` method in
 [main.js](https://github.com/romannurik/MaterialColorsApp/blob/master/app/main.js).
