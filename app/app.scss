@@ -16,6 +16,8 @@
 
 @import 'fonts';
 
+$colorBackground: #fff;
+
 $colorBlackTextPrimary: rgba(#000, .87);
 $colorBlackTextSecondary: rgba(#000, .54);
 $colorBlackTextDisabled: rgba(#000, .38);
@@ -57,6 +59,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  background-color: $colorBackground;
 }
 
 .close-button {
@@ -169,7 +172,7 @@ body {
     bottom: 2px;
     content: '';
     border-radius: 50%;
-    background-color: #fff;
+    background-color: $colorBackground;
   }
 
   .hue.is-selected & {
