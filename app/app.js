@@ -43,7 +43,10 @@ class MaterialColors {
       closeButton: 'close-button',
       updateBanner: 'update-banner',
       isSelected: 'is-selected',
-      isWhite: 'is-white'
+      isWhite: 'is-white',
+      search: 'search',
+      searchIcon: 'search-icon',
+      searchLabel: 'search-label',
     };
 
     this._init();
@@ -71,6 +74,23 @@ class MaterialColors {
 
   _buildUi() {
     let firstHue;
+    let greyColor = this.COLORS['grey'];
+
+    let $search = $('<div>')
+        .addClass(`${this.CLASS_NAMES.search}`)
+        .click(() => this._searchMode())
+        .appendTo(this.$hues);
+
+    let $searchIcon = $('<div>')
+        .addClass(this.CLASS_NAMES.searchIcon)
+        .css('background-color', greyColor['500'])
+        .appendTo($search);
+
+    $('<div>')
+        .addClass(this.CLASS_NAMES.searchLabel)
+        .text('Search')
+        .appendTo($search);
+
     for (let hue in this.COLORS) {
       let color = this.COLORS[hue];
       if (!firstHue) {
@@ -101,9 +121,27 @@ class MaterialColors {
     this._selectHue(firstHue);
   }
 
+  _searchMode() {
+    // Toggle selected hue
+    this.$hues.find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
+        .removeClass(this.CLASS_NAMES.isSelected);
+    this.$hues.find(`.${this.CLASS_NAMES.search}`)
+        .addClass(this.CLASS_NAMES.isSelected);
+
+    // Empty values
+    this.$values.find('*').remove();
+
+    $('<div>')
+        .addClass(this.CLASS_NAMES.valueHeading)
+        .text('Search')
+        .appendTo(this.$values);
+  }
+
   _selectHue(hue) {
     // Toggle selected hue
     this.$hues.find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
+        .removeClass(this.CLASS_NAMES.isSelected);
+    this.$hues.find(`.${this.CLASS_NAMES.search}.${this.CLASS_NAMES.isSelected}`)
         .removeClass(this.CLASS_NAMES.isSelected);
     this.$hues.find(`.${this.CLASS_NAMES.hue}-${hue}`)
         .addClass(this.CLASS_NAMES.isSelected);

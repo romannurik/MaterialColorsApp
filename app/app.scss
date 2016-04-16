@@ -100,7 +100,7 @@ body {
   box-shadow: -1px 0 0 $thinBorderColor inset;
 }
 
-.hue {
+.search, .hue {
   position: relative;
   flex: 1 0 0;
   cursor: pointer;
@@ -109,12 +109,16 @@ body {
   align-items: center;
   justify-content: center;
 
-  &:hover .hue-label {
+  &:hover .search-label, &:hover .hue-label {
     display: block;
   }
 }
 
-.hue-label {
+.search {
+  padding: 2px 0;
+}
+
+.search-label, .hue-label {
   pointer-events: none;
   display: none;
   position: absolute;
@@ -151,6 +155,20 @@ body {
   width: $hueIconWidth;
   height: $hueIconWidth;
   border-radius: 50%;
+}
+
+.search-icon {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  background: url('./assets/ic_search_black_2x.png') no-repeat;
+  background-size: 23px;
+  transform: scale(.7);
+  transition: transform $animTimeVeryFast ease;
+
+  .search.is-selected & {
+    transform: scale(1);
+  }
 }
 
 .hue-icon-selector {
