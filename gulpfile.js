@@ -111,7 +111,6 @@ gulp.task('dist', ['build', 'install-packages'], function(cb) {
     'app-bundle-id': packageInfo.appBundleId,
     'app-category-type': 'app-category-type=public.app-category.developer-tools',
     'app-version': packageInfo.version,
-    //'sign': 'Developer ID Application: Roman NURIK (NLACF347G7)',
     'icon': 'icon.icns',
     'name': packageInfo.appDisplayName,
     'overwrite': true,
