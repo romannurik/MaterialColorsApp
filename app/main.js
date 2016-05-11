@@ -33,6 +33,18 @@ let mainWindow;
 let trayIcon;
 
 
+let shouldQuit = app.makeSingleInstance(() => {
+  mainWindow.show();
+  mainWindow.focus();
+});
+
+
+if (shouldQuit) {
+  app.quit();
+  return;
+}
+
+
 app.on('ready', () => {
   mainWindow = new electron.BrowserWindow({
     width: 200,
@@ -75,6 +87,7 @@ app.on('activate', () => {
   }
   if (!mainWindow.isVisible()) {
     mainWindow.show();
+    mainWindow.focus();
   }
 });
 

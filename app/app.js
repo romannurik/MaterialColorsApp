@@ -18,9 +18,9 @@
 
 const $ = require('jquery');
 const electron = require('electron');
-const remote = require('remote');
-const Menu = remote.require('menu');
-const MenuItem = remote.require('menu-item');
+const remote = electron.remote;
+const Menu = remote.Menu;
+const MenuItem = remote.MenuItem;
 
 
 class MaterialColors {
