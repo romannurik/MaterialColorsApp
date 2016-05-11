@@ -27,6 +27,8 @@ const UPDATE_FEED_URL = 'http://roman-update-service.appspot.com/s/check_updates
 
 const DEV_MODE = argv.dev;
 
+const IS_MAC = process.platform == 'darwin';
+
 
 let isTrayMode = true;
 let mainWindow;
@@ -47,6 +49,7 @@ if (shouldQuit) {
 
 app.on('ready', () => {
   mainWindow = new electron.BrowserWindow({
+    backgroundColor: '#fff',
     width: 200,
     height: 12 * 2 /* padding */
           + 12 + 8 /* heading */
@@ -129,16 +132,21 @@ function updateUiMode() {
     });
   }
 
-  menuItems.push({
-    label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
-    click: () => {
-      isTrayMode = !isTrayMode;
-      updateUiMode();
-    }
-  });
+  if (IS_MAC) {
+    menuItems.push({
+      label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
+      click: () => {
+        isTrayMode = !isTrayMode;
+        updateUiMode();
+      }
+    });
+  }
 
   menuItems.push({ type: 'separator' });
-  menuItems.push({ label: 'About ' + app.getName(), role: 'about' });
+
+  if (IS_MAC) {
+    menuItems.push({ label: 'About ' + app.getName(), role: 'about' });
+  }
 
   if (isTrayMode) {
     menuItems.push({ label: 'Quit', click: () => app.quit() });
