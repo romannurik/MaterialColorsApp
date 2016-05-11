@@ -28,6 +28,8 @@ $colorWhiteTextDisabled: rgba(#fff, .5);
 $colorTooltipBackground: #263238;
 $colorTooltipText: #fff;
 
+$appBackground: #fff;
+
 $thinBorderColor: rgba(#000, .12);
 
 $hueIconWidth: 14px;
@@ -47,6 +49,7 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   cursor: default;
+  background: $appBackground;
 }
 
 * {
@@ -67,6 +70,9 @@ body {
   right: 12px;
   top: 8px;
   z-index: 100;
+  &, & * {
+    -webkit-app-region: no-drag;
+  }
 
   svg {
     fill: $colorBlackTextDisabled;
@@ -108,6 +114,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  &, & *{
+    -webkit-app-region: no-drag;
+  }
 
   &,
   & * {
