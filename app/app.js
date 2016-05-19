@@ -21,8 +21,8 @@ const electron = require('electron');
 const remote = require('remote');
 const Menu = remote.require('menu');
 const MenuItem = remote.require('menu-item');
-var tinycolor = require("tinycolor2");
-var _ = require('lodash');
+const tinycolor = require("tinycolor2");
+const _ = require('lodash');
 
 
 class MaterialColors {
@@ -154,7 +154,7 @@ class MaterialColors {
           .appendTo(this.$searchSection);
 
       // search text input
-      var $searchInput = $('<input>')
+      let $searchInput = $('<input>')
           .addClass(this.CLASS_NAMES.searchInput)
           .on('input', (event) => this._onSearchInput(event))
           .attr('placeholder', 'Color code or name')
