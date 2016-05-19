@@ -132,7 +132,6 @@ class MaterialColors {
   }
 
   _searchMode() {
-    // Toggle selected hue
     this.$sidebar.find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
         .removeClass(this.CLASS_NAMES.isSelected);
     this.$sidebar.find(`.${this.CLASS_NAMES.search}`)
@@ -142,11 +141,11 @@ class MaterialColors {
     $(`.${this.CLASS_NAMES.variationList}`).addClass('hide');
 
     if (this.$_cache['search']) {
-        // if search already rendered.
+        // if search is already rendered.
         $(`.${this.CLASS_NAMES.searchInput}`).select();
         return;
     } else {
-      // build search ui, if first time here.
+      // first time here? build search ui.
 
       // title
       $('<div>')
@@ -161,6 +160,7 @@ class MaterialColors {
           .attr('placeholder', 'Color code or name')
           .appendTo(this.$searchSection);
 
+      // search result area
       this.$searchResult = $('<div>')
           .addClass(this.CLASS_NAMES.searchResult)
           .appendTo(this.$searchSection);
@@ -187,15 +187,9 @@ class MaterialColors {
         .removeClass(this.CLASS_NAMES.isSelected);
     this.$sidebar.find(`.${this.CLASS_NAMES.hue}-${hue}`)
         .addClass(this.CLASS_NAMES.isSelected);
-    this.$sidebar.find(`.${this.CLASS_NAMES.searchLabel}`)
-        .addClass('hide');
 
     $(`.${this.CLASS_NAMES.searchSection}`).addClass('hide');
     $(`.${this.CLASS_NAMES.variationList}`).removeClass('hide');
-
-    // if ($domCache[hue]) {
-    //     this.$variationList = $domCache[hue];
-    // }
 
     // Empty variation list
     this.$variationList.find('*').remove();
@@ -205,6 +199,7 @@ class MaterialColors {
         .text(this._getDisplayLabelForHue(hue))
         .appendTo(this.$variationList);
 
+    // for each variation in the hue
     for (let value in this.COLORS[hue]) {
       let color = this.COLORS[hue];
 
@@ -230,6 +225,7 @@ class MaterialColors {
           .appendTo($value);
     }
 
+    // TODO(abhiomkar): use this dom cache instead of re-rendering.
     this.$_cache[hue] = this.$variationList.children();
   }
 
@@ -238,13 +234,13 @@ class MaterialColors {
     let inputColor = tinycolor(value);
 
     if (!value) {
+      // search input is empty.
       this.$searchResult
         .empty()
         .append(this.$searchHelpText);
       return;
-    }
-
-    if (inputColor.isValid()) {
+    } else if (inputColor.isValid()) {
+      // search input is valid.
       let hex = inputColor.toHexString();
       let alpha = inputColor.getAlpha();
       let materialColor = this._getMaterialColorByHex(hex);
@@ -295,8 +291,8 @@ class MaterialColors {
 
   _getColorTile(color) {
     let $colorTile = $('<div>').addClass(this.CLASS_NAMES.colorTile);
-    let hexClasses = [];
 
+    // top left
     if (color.hue) {
       $('<span>')
           .addClass('top-left')
@@ -304,6 +300,7 @@ class MaterialColors {
           .appendTo($colorTile);
     }
 
+    // top right
     if (color.alpha && color.alpha < 1) {
         $('<span>')
             .addClass('top-right')
@@ -311,6 +308,7 @@ class MaterialColors {
             .appendTo($colorTile);
     }
 
+    // bottom left
     if (color.variation) {
       $('<span>')
           .addClass('bottom-left')
@@ -318,11 +316,12 @@ class MaterialColors {
           .appendTo($colorTile);
     }
 
-    hexClasses = ['bottom-right', this.CLASS_NAMES.valueHex];
+    let hexClasses = ['bottom-right', this.CLASS_NAMES.valueHex];
     if (color.white) {
       hexClasses.push('is-white');
     }
 
+    // bottom right
     $('<span>')
         .addClass(hexClasses.join(' '))
         .text(color.hex)
@@ -345,9 +344,6 @@ class MaterialColors {
     let materialColor;
 
     _.forEach(this.COLORS, function(variations, hue) {
-      // continue the loop if we haven't yet found the material color.
-      // return !materialColor;
-
       _.forEach(variations, function(variationValue, variation) {
         if (_.lowerCase(variationValue.color) === _.lowerCase(hex)) {
           materialColor = { hue, variation, white: variationValue.white };
