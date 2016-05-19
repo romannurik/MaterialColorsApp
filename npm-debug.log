@@ -1,0 +1,45 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/Users/abhiomkar/homebrew/Cellar/node/5.4.0/bin/node',
+1 verbose cli   '/Users/abhiomkar/homebrew/bin/npm',
+1 verbose cli   'start' ]
+2 info using npm@3.3.12
+3 info using node@v5.4.0
+4 verbose run-script [ 'prestart', 'start', 'poststart' ]
+5 info lifecycle material-colors@1.0.1~prestart: material-colors@1.0.1
+6 silly lifecycle material-colors@1.0.1~prestart: no script for prestart, continuing
+7 info lifecycle material-colors@1.0.1~start: material-colors@1.0.1
+8 verbose lifecycle material-colors@1.0.1~start: unsafe-perm in lifecycle true
+9 verbose lifecycle material-colors@1.0.1~start: PATH: /Users/abhiomkar/homebrew/lib/node_modules/npm/bin/node-gyp-bin:/Users/abhiomkar/code/MaterialColorsApp/node_modules/.bin:/usr/local/git/current/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/Users/abhiomkar/homebrew/bin:/Users/abhiomkar/bin
+10 verbose lifecycle material-colors@1.0.1~start: CWD: /Users/abhiomkar/code/MaterialColorsApp
+11 silly lifecycle material-colors@1.0.1~start: Args: [ '-c', 'gulp' ]
+12 silly lifecycle material-colors@1.0.1~start: Returned: code: 1  signal: null
+13 info lifecycle material-colors@1.0.1~start: Failed to exec start script
+14 verbose stack Error: material-colors@1.0.1 start: `gulp`
+14 verbose stack Exit status 1
+14 verbose stack     at EventEmitter.<anonymous> (/Users/abhiomkar/homebrew/lib/node_modules/npm/lib/utils/lifecycle.js:232:16)
+14 verbose stack     at emitTwo (events.js:87:13)
+14 verbose stack     at EventEmitter.emit (events.js:172:7)
+14 verbose stack     at ChildProcess.<anonymous> (/Users/abhiomkar/homebrew/lib/node_modules/npm/lib/utils/spawn.js:24:14)
+14 verbose stack     at emitTwo (events.js:87:13)
+14 verbose stack     at ChildProcess.emit (events.js:172:7)
+14 verbose stack     at maybeClose (internal/child_process.js:821:16)
+14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:211:5)
+15 verbose pkgid material-colors@1.0.1
+16 verbose cwd /Users/abhiomkar/code/MaterialColorsApp
+17 error Darwin 15.4.0
+18 error argv "/Users/abhiomkar/homebrew/Cellar/node/5.4.0/bin/node" "/Users/abhiomkar/homebrew/bin/npm" "start"
+19 error node v5.4.0
+20 error npm  v3.3.12
+21 error code ELIFECYCLE
+22 error material-colors@1.0.1 start: `gulp`
+22 error Exit status 1
+23 error Failed at the material-colors@1.0.1 start script 'gulp'.
+23 error Make sure you have the latest version of node.js and npm installed.
+23 error If you do, this is most likely a problem with the material-colors package,
+23 error not with npm itself.
+23 error Tell the author that this fails on your system:
+23 error     gulp
+23 error You can get their info via:
+23 error     npm owner ls material-colors
+23 error There is likely additional logging output above.
+24 verbose exit [ 1, true ]

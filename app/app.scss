@@ -31,12 +31,14 @@ $colorTooltipText: #fff;
 $thinBorderColor: rgba(#000, .12);
 
 $hueIconWidth: 14px;
-$huesWidth: 12px * 2 + $hueIconWidth;
+$sidebarWidth: 12px * 2 + $hueIconWidth;
 
 $animTimeMedium: .3s;
 $animTimeFast: $animTimeMedium / 2;
 $animTimeVeryFast: $animTimeMedium / 3;
 $animTimeSlow: $animTimeMedium * 1.5;
+
+$tilePadding: 6px;
 
 html,
 body {
@@ -45,6 +47,7 @@ body {
   overflow: hidden;
   font-family: Roboto;
   font-weight: 400;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   cursor: default;
 }
@@ -55,7 +58,7 @@ body {
 }
 
 body {
-  padding-left: $huesWidth;
+  padding-left: $sidebarWidth;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -87,12 +90,12 @@ body {
   }
 }
 
-.hues {
+.sidebar {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: $huesWidth;
+  width: $sidebarWidth;
   padding-top: 8px;
   padding-bottom: 8px;
   display: flex;
@@ -116,6 +119,10 @@ body {
 
 .search {
   padding: 2px 0;
+
+  &.is-selected .search-label {
+    display: none;
+  }
 }
 
 .search-label, .hue-label {
@@ -147,6 +154,65 @@ body {
     left: -8px;
     top: 50%;
     margin-top: -4px;
+  }
+}
+
+.search-input {
+  height: 20px;
+  width: 127px;
+  border: 0.5px solid #C7C7C7;
+  border-radius: 2px;
+  box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.12) inset;
+  padding: 4px 8px;
+  outline: none;
+  font-size: 11px;
+  font-family: 'Roboto';
+}
+
+.search-helptext {
+  margin-top: 100%;
+  text-align: center;
+  font-size: 11px;
+  color: $colorBlackTextDisabled;
+  padding: 0 10px;
+  line-height: 15px;
+}
+
+.color-tile {
+  position: relative;
+  height: 87px;
+  width: 145px;
+  font-size: 10px;
+  padding: 5px;
+  margin: 10px 8px 0 0;
+  border-radius: 2px;
+  box-sizing: border-box;
+
+  .top-left {
+    position: absolute;
+    top: $tilePadding;
+    left: $tilePadding;
+    text-transform: capitalize;
+  }
+
+  .top-right {
+      position: absolute;
+      top: $tilePadding;
+      right: $tilePadding;
+  }
+
+  .bottom-left {
+      position: absolute;
+      bottom: $tilePadding;
+      left: $tilePadding;
+      text-transform: uppercase;
+  }
+
+  .bottom-right {
+      position: absolute;
+      bottom: 3px;
+      right: 3px;
+      text-transform: uppercase;
   }
 }
 
@@ -198,11 +264,28 @@ body {
   }
 }
 
-.values {
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  z-index: 1;
+}
+
+.search-section {
   flex: 1;
   overflow-y: auto;
   padding: 12px;
   z-index: 1;
+
+  &.hide { display: none; }
+}
+
+.variation-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  z-index: 1;
+
+  &.hide { display: none; }
 }
 
 .value-heading {
