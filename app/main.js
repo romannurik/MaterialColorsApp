@@ -27,14 +27,29 @@ const UPDATE_FEED_URL = 'http://roman-update-service.appspot.com/s/check_updates
 
 const DEV_MODE = argv.dev;
 
+const IS_MAC = process.platform == 'darwin';
+
 
 let isTrayMode = true;
 let mainWindow;
 let trayIcon;
 
 
+let shouldQuit = app.makeSingleInstance(() => {
+  mainWindow.show();
+  mainWindow.focus();
+});
+
+
+if (shouldQuit) {
+  app.quit();
+  return;
+}
+
+
 app.on('ready', () => {
   mainWindow = new electron.BrowserWindow({
+    backgroundColor: '#fff',
     width: 200,
     height: 12 * 2 /* padding */
           + 12 + 8 /* heading */
@@ -75,6 +90,7 @@ app.on('activate', () => {
   }
   if (!mainWindow.isVisible()) {
     mainWindow.show();
+    mainWindow.focus();
   }
 });
 
@@ -88,6 +104,9 @@ function updateUiMode() {
     if (!trayIcon) {
       trayIcon = new electron.Tray(__dirname + '/assets/TrayIconTemplate.png');
       trayIcon.setToolTip(app.getName());
+      trayIcon.on('right-click', () => {
+        mainWindow[mainWindow.isVisible() ? 'hide' : 'show']();
+      });
     }
   } else if (trayIcon) {
     trayIcon.destroy();
@@ -95,7 +114,7 @@ function updateUiMode() {
   }
 
   // Build or teardown dock
-  if (app.dock) {
+  if (IS_MAC && app.dock) {
     if (!isTrayMode) {
       app.dock.show();
     } else {
@@ -104,10 +123,10 @@ function updateUiMode() {
   }
 
   // Update menu
-  var menuItems = [];
+  var contextMenuTemplate = [];
 
   if (isTrayMode) {
-    menuItems.push({
+    contextMenuTemplate.push({
       label: mainWindow.isVisible() ? 'Hide Colors' : 'Show Colors',
       click: () => {
         mainWindow[mainWindow.isVisible() ? 'hide' : 'show']();
@@ -116,32 +135,65 @@ function updateUiMode() {
     });
   }
 
-  menuItems.push({
-    label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
-    click: () => {
-      isTrayMode = !isTrayMode;
-      updateUiMode();
-    }
-  });
-
-  menuItems.push({ type: 'separator' });
-  menuItems.push({ label: 'About ' + app.getName(), role: 'about' });
-
-  if (isTrayMode) {
-    menuItems.push({ label: 'Quit', click: () => app.quit() });
+  if (IS_MAC) {
+    contextMenuTemplate.push({
+      label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
+      click: () => {
+        isTrayMode = !isTrayMode;
+        updateUiMode();
+      }
+    });
   }
 
-  var contextMenu = electron.Menu.buildFromTemplate(menuItems);
+  contextMenuTemplate.push({ type: 'separator' });
+
+  if (IS_MAC) {
+    contextMenuTemplate.push({
+      label: 'About ' + app.getName(),
+      role: 'about'
+    });
+  }
+
+  const QUIT_MENU_ITEM = {
+    label: 'Quit',
+    accelerator: 'Command+Q',
+    click: () => app.quit()
+  };
 
   if (isTrayMode) {
-    trayIcon.setContextMenu(contextMenu);
+    contextMenuTemplate.push(QUIT_MENU_ITEM);
+  }
+
+  var contextMenu = electron.Menu.buildFromTemplate(contextMenuTemplate);
+
+  if (isTrayMode) {
     mainWindow.setAlwaysOnTop(true);
+    trayIcon.setContextMenu(contextMenu);
   } else {
-    app.dock.setMenu(contextMenu);
     mainWindow.setAlwaysOnTop(false);
+
+    if (IS_MAC) {
+      app.dock.setMenu(contextMenu);
+
+      // build the app menu
+      let appMenuTemplate = [
+        {
+          label: 'app', // automatically set to title
+          submenu: contextMenuTemplate.slice().concat([
+            QUIT_MENU_ITEM
+          ])
+        },
+        {
+          label: 'Help',
+          role: 'help',
+          submenu: []
+        }
+      ];
+      electron.Menu.setApplicationMenu(
+          electron.Menu.buildFromTemplate(appMenuTemplate));
+    }
   }
 
-  //electron.Menu.setApplicationMenu(contextMenu);
   writePrefs();
 }
 

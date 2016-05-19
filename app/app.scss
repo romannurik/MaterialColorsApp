@@ -40,6 +40,13 @@ $animTimeSlow: $animTimeMedium * 1.5;
 
 $tilePadding: 6px;
 
+@mixin nodrag {
+  &,
+  & * {
+    -webkit-app-region: no-drag;
+  }
+}
+
 html,
 body {
   height: 100%;
@@ -70,6 +77,8 @@ body {
   right: 12px;
   top: 8px;
   z-index: 100;
+
+  @include nodrag;
 
   svg {
     fill: $colorBlackTextDisabled;
@@ -107,6 +116,7 @@ body {
   position: relative;
   flex: 1 0 0;
   cursor: pointer;
+  @include nodrag;
 
   display: flex;
   align-items: center;
@@ -327,7 +337,7 @@ body {
   cursor: pointer;
   padding: 2px;
   border-radius: 2px;
-  -webkit-app-region: no-drag;
+  @include nodrag;
 
   &:hover {
     background-color: rgba(#000, .1);
