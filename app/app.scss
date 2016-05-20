@@ -395,3 +395,29 @@ body {
     background-color: #546E7A;
   }
 }
+
+.not-found-icon {
+  text-align: center;
+  margin-top: 130px;
+
+  svg {
+    fill: $colorBlackTextDisabled;
+    margin: 0 auto;
+    height: 40px;
+    width: 40px;
+  }
+}
+
+.not-found-label {
+  text-align: center;
+  font-size: 11px;
+  color: $colorBlackTextSecondary;
+  margin-top: 2px;
+}
+
+.matching-material-label {
+  margin-top: 12px;
+  margin-bottom: 5px;
+  color: $colorBlackTextPrimary;
+  font-size: 11px;
+}

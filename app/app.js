@@ -60,6 +60,9 @@ class MaterialColors {
       updateBanner: 'update-banner',
       valueHeading: 'value-heading',
       valueList: 'value-list',
+      notFoundIcon: 'not-found-icon',
+      notFoundLabel: 'not-found-label',
+      matchingMaterialLabel: 'matching-material-label',
     };
 
     this._init();
@@ -251,9 +254,36 @@ class MaterialColors {
         // Non-material color.
         this._buildValueTile({ hex, alpha, white: inputColor.isDark() }, true)
             .appendTo(this.$searchResults);
+
+        $('<div>')
+          .addClass(this.CLASS_NAMES.matchingMaterialLabel)
+          .text('Matching Material Color')
+          .appendTo(this.$searchResults);
+
+        // suggest a closest material color.
+        let closestMaterialColorHex = this._getClosestMaterialColor(inputColor);
+        materialValue = this._getMaterialValueByHex(closestMaterialColorHex);
+
+        this._buildValueTile(materialValue, true)
+            .appendTo(this.$searchResults);
       }
     } else {
-      // TODO(abhiomkar): handle invalid search input.
+      // not found
+      this.$searchResults.empty();
+
+      $('<div>')
+        .addClass(this.CLASS_NAMES.notFoundIcon)
+        .append($(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
+              <path d="M0 0h24v24H0z" fill="none"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>`))
+        .appendTo(this.$searchResults);
+
+      $('<div>')
+        .addClass(this.CLASS_NAMES.notFoundLabel)
+        .text('Not Found')
+        .appendTo(this.$searchResults);
     }
   }
 
@@ -341,6 +371,44 @@ class MaterialColors {
     }
 
     return null;
+  }
+
+  _getColorDifference(colorAValue, colorBValue) {
+    let colorA = tinycolor(colorAValue);
+    let colorB = tinycolor(colorBValue);
+
+    // Color difference based on CIE76 formula.
+    // Wiki: https://en.wikipedia.org/wiki/Color_difference#CIE76
+    
+    return Math.sqrt(Math.pow(colorA._r - colorB._r, 2) + // red
+                     Math.pow(colorA._g - colorB._g, 2) + // green
+                     Math.pow(colorA._b - colorB._b, 2)); // blue
+  }
+
+  _getAllMaterialColorValues() {
+    let self = this;
+    let allColors = [];
+
+    Object.keys(this.COLORS).map(function(hue) {
+      Object.keys(self.COLORS[hue]).map(function(value) {
+        allColors.push(self.COLORS[hue][value].hex);
+      });
+    });
+
+    return allColors;
+  }
+
+  _getClosestMaterialColor(inputColor) {
+    let self = this;
+    let closestColor = this._getAllMaterialColorValues()
+      .map(function(color) {
+        return { color, difference: self._getColorDifference(inputColor, color) };
+      })
+      .reduce(function(a, b) {
+        return (b.difference < a.difference) ? b : a;
+       }, {difference: Infinity});
+
+    return closestColor && closestColor.color;
   }
 } // class MaterialColors
 
