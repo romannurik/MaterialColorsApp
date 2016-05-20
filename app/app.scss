@@ -77,7 +77,7 @@ body {
   right: 12px;
   top: 8px;
   z-index: 100;
-
+  cursor: pointer;
   @include nodrag;
 
   svg {
@@ -134,6 +134,7 @@ body {
     fill: $colorBlackTextDisabled;
     width: 20px;
     height: 20px;
+    transition: fill $animTimeVeryFast ease;
   }
 
   .search-icon {
