@@ -256,9 +256,9 @@ class MaterialColors {
             .appendTo(this.$searchResults);
 
         $('<div>')
-          .addClass(this.CLASS_NAMES.matchingMaterialLabel)
-          .text('Matching Material Color')
-          .appendTo(this.$searchResults);
+            .addClass(this.CLASS_NAMES.matchingMaterialLabel)
+            .text('Similar Material colors')
+            .appendTo(this.$searchResults);
 
         // suggest a closest material color.
         let closestMaterialColorHex = this._getClosestMaterialColor(inputColor);
@@ -272,18 +272,18 @@ class MaterialColors {
       this.$searchResults.empty();
 
       $('<div>')
-        .addClass(this.CLASS_NAMES.notFoundIcon)
-        .append($(`
-          <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
-              <path d="M0 0h24v24H0z" fill="none"/>
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-          </svg>`))
-        .appendTo(this.$searchResults);
+          .addClass(this.CLASS_NAMES.notFoundIcon)
+          .append($(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
+                <path d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>`))
+          .appendTo(this.$searchResults);
 
       $('<div>')
-        .addClass(this.CLASS_NAMES.notFoundLabel)
-        .text('Not Found')
-        .appendTo(this.$searchResults);
+          .addClass(this.CLASS_NAMES.notFoundLabel)
+          .text('Unknown color')
+          .appendTo(this.$searchResults);
     }
   }
 
@@ -335,7 +335,7 @@ class MaterialColors {
     if (value.hueName) {
       $('<span>')
           .addClass(this.CLASS_NAMES.colorTileHueName)
-          .text(value.hueName)
+          .text(this._getDisplayLabelForHue(value.hueName))
           .appendTo($colorTile);
     }
 
@@ -379,7 +379,7 @@ class MaterialColors {
 
     // Color difference based on CIE76 formula.
     // Wiki: https://en.wikipedia.org/wiki/Color_difference#CIE76
-    
+
     return Math.sqrt(Math.pow(colorA._r - colorB._r, 2) + // red
                      Math.pow(colorA._g - colorB._g, 2) + // green
                      Math.pow(colorA._b - colorB._b, 2)); // blue
@@ -389,11 +389,9 @@ class MaterialColors {
     let self = this;
     let allColors = [];
 
-    Object.keys(this.COLORS).map(function(hue) {
-      Object.keys(self.COLORS[hue]).map(function(value) {
-        allColors.push(self.COLORS[hue][value].hex);
-      });
-    });
+    Object.keys(this.COLORS).map(hue =>
+        Object.keys(self.COLORS[hue]).map(value =>
+            allColors.push(self.COLORS[hue][value].hex)));
 
     return allColors;
   }
@@ -401,12 +399,8 @@ class MaterialColors {
   _getClosestMaterialColor(inputColor) {
     let self = this;
     let closestColor = this._getAllMaterialColorValues()
-      .map(function(color) {
-        return { color, difference: self._getColorDifference(inputColor, color) };
-      })
-      .reduce(function(a, b) {
-        return (b.difference < a.difference) ? b : a;
-       }, {difference: Infinity});
+        .map(color => ({ color, difference: self._getColorDifference(inputColor, color) }))
+        .reduce((a, b) => (b.difference < a.difference) ? b : a, {difference: Infinity});
 
     return closestColor && closestColor.color;
   }

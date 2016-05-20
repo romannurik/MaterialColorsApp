@@ -312,7 +312,7 @@ body {
 }
 
 .color-tile.is-large {
-  height: 64px;
+  height: 88px;
 
   .color-tile-hue-name,
   .color-tile-alpha {
@@ -329,7 +329,6 @@ body {
 }
 
 .color-tile-hue-name {
-  text-transform: capitalize;
   font-size: 12px;
   font-weight: 500;
   line-height: 16px;
@@ -398,7 +397,7 @@ body {
 
 .not-found-icon {
   text-align: center;
-  margin-top: 130px;
+  margin-top: 128px;
 
   svg {
     fill: $colorBlackTextDisabled;
@@ -410,14 +409,15 @@ body {
 
 .not-found-label {
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 16px;
   color: $colorBlackTextSecondary;
-  margin-top: 2px;
 }
 
 .matching-material-label {
-  margin-top: 12px;
-  margin-bottom: 5px;
-  color: $colorBlackTextPrimary;
-  font-size: 11px;
+  margin-top: 16px;
+  margin-bottom: 4px;
+  color: $colorBlackTextSecondary;
+  font-size: 10px;
+  line-height: 16px;
 }
