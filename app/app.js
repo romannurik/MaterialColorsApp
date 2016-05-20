@@ -17,12 +17,13 @@
 'use strict';
 
 const $ = require('jquery');
+
 const electron = require('electron');
 const remote = electron.remote;
 const Menu = remote.Menu;
 const MenuItem = remote.MenuItem;
+
 const tinycolor = require("tinycolor2");
-const _ = require('lodash');
 
 
 class MaterialColors {
@@ -33,28 +34,32 @@ class MaterialColors {
 
     this.COLORS = require('./colors.js');
     this.CLASS_NAMES = {
-      sidebar: 'sidebar',
+      closeButton: 'close-button',
+      colorTile: 'color-tile',
+      colorTileAlpha: 'color-tile-alpha',
+      colorTileHex: 'color-tile-hex',
+      colorTileHueName: 'color-tile-hue-name',
+      colorTileValueName: 'color-tile-value-name',
+      contentArea: 'content-area',
       hue: 'hue',
       hueIcon: 'hue-icon',
       hueIconSelector: 'hue-icon-selector',
       hueLabel: 'hue-label',
-      contentArea: 'content-area',
-      valueHeading: 'value-heading',
-      value: 'value',
-      valueName: 'value-name',
-      valueHex: 'value-hex',
-      closeButton: 'close-button',
-      updateBanner: 'update-banner',
+      isHidden: 'is-hidden',
       isSelected: 'is-selected',
       isWhite: 'is-white',
-      search: 'search',
-      searchSection: 'search-section',
+      isLarge: 'is-large',
+      searchButton: 'search-button',
+      searchHelpText: 'search-help-text',
       searchIcon: 'search-icon',
-      searchLabel: 'search-label',
       searchInput: 'search-input',
-      searchHelptext: 'search-helptext',
-      variationList: 'variation-list',
-      colorTile: 'color-tile',
+      searchLabel: 'search-label',
+      searchResults: 'search-results',
+      searchSection: 'search-section',
+      sidebar: 'sidebar',
+      updateBanner: 'update-banner',
+      valueHeading: 'value-heading',
+      valueList: 'value-list',
     };
 
     this._init();
@@ -64,7 +69,7 @@ class MaterialColors {
     this.$sidebar = $(`.${this.CLASS_NAMES.sidebar}`);
     this.$contentArea = $(`.${this.CLASS_NAMES.contentArea}`);
     this.$searchSection = $(`.${this.CLASS_NAMES.searchSection}`);
-    this.$variationList = $(`.${this.CLASS_NAMES.variationList}`);
+    this.$valueList = $(`.${this.CLASS_NAMES.valueList}`);
 
     this._buildUi();
 
@@ -86,20 +91,20 @@ class MaterialColors {
     let firstHue;
     let greyColor = this.COLORS['grey'];
 
-    let $search = $('<div>')
-        .addClass(`${this.CLASS_NAMES.search}`)
-        .click(() => this._searchMode())
+    let $searchButton = $('<div>')
+        .addClass(`${this.CLASS_NAMES.searchButton}`)
+        .click(() => this._selectSearchMode())
         .appendTo(this.$sidebar);
 
     let $searchIcon = $('<div>')
         .addClass(this.CLASS_NAMES.searchIcon)
         .css('background-color', greyColor['500'])
-        .appendTo($search);
+        .appendTo($searchButton);
 
     $('<div>')
         .addClass(this.CLASS_NAMES.searchLabel)
         .text('Search')
-        .appendTo($search);
+        .appendTo($searchButton);
 
     for (let hue in this.COLORS) {
       let color = this.COLORS[hue];
@@ -114,12 +119,12 @@ class MaterialColors {
 
       let $hueIcon = $('<div>')
           .addClass(this.CLASS_NAMES.hueIcon)
-          .css('background-color', color['500'].color)
+          .css('background-color', color['500'].hex)
           .appendTo($hue);
 
       $('<div>')
           .addClass(this.CLASS_NAMES.hueIconSelector)
-          .css('background-color', color['700'].color)
+          .css('background-color', color['700'].hex)
           .appendTo($hueIcon);
 
       $('<div>')
@@ -131,19 +136,20 @@ class MaterialColors {
     this._selectHue(firstHue);
   }
 
-  _searchMode() {
-    this.$sidebar.find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
+  _selectSearchMode() {
+    this.$sidebar
+        .find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
         .removeClass(this.CLASS_NAMES.isSelected);
-    this.$sidebar.find(`.${this.CLASS_NAMES.search}`)
+    this.$sidebar
+        .find(`.${this.CLASS_NAMES.searchButton}`)
         .addClass(this.CLASS_NAMES.isSelected);
 
-    $(`.${this.CLASS_NAMES.searchSection}`).removeClass('hide');
-    $(`.${this.CLASS_NAMES.variationList}`).addClass('hide');
+    $(`.${this.CLASS_NAMES.searchSection}`).removeClass(this.CLASS_NAMES.isHidden);
+    $(`.${this.CLASS_NAMES.valueList}`).addClass(this.CLASS_NAMES.isHidden);
 
     if (this.$_cache['search']) {
-        // if search is already rendered.
-        $(`.${this.CLASS_NAMES.searchInput}`).select();
-        return;
+      // if search is already rendered.
+      $(`.${this.CLASS_NAMES.searchInput}`).select();
     } else {
       // first time here? build search ui.
 
@@ -156,22 +162,22 @@ class MaterialColors {
       // search text input
       let $searchInput = $('<input>')
           .addClass(this.CLASS_NAMES.searchInput)
-          .on('input', (event) => this._onSearchInput(event))
+          .on('input', event => this._onSearchInput(event))
           .attr('placeholder', 'Color code or name')
           .appendTo(this.$searchSection);
 
       // search result area
-      this.$searchResult = $('<div>')
-          .addClass(this.CLASS_NAMES.searchResult)
+      this.$searchResults = $('<div>')
+          .addClass(this.CLASS_NAMES.searchResults)
           .appendTo(this.$searchSection);
 
       // help text
       this.$searchHelpText = $('<div>')
-          .addClass(this.CLASS_NAMES.searchHelptext)
-          .text('Search by Material Color name or code. \
+          .addClass(this.CLASS_NAMES.searchHelpText)
+          .text('Search by material color name or code. \
                  Copy any color code format to clipboard \
                  to detect the color name.')
-          .appendTo(this.$searchResult);
+          .appendTo(this.$searchResults);
 
       $searchInput.focus();
 
@@ -183,50 +189,32 @@ class MaterialColors {
     // Toggle selected hue
     this.$sidebar.find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
         .removeClass(this.CLASS_NAMES.isSelected);
-    this.$sidebar.find(`.${this.CLASS_NAMES.search}`)
+    this.$sidebar.find(`.${this.CLASS_NAMES.searchButton}`)
         .removeClass(this.CLASS_NAMES.isSelected);
     this.$sidebar.find(`.${this.CLASS_NAMES.hue}-${hue}`)
         .addClass(this.CLASS_NAMES.isSelected);
 
-    $(`.${this.CLASS_NAMES.searchSection}`).addClass('hide');
-    $(`.${this.CLASS_NAMES.variationList}`).removeClass('hide');
+    $(`.${this.CLASS_NAMES.searchSection}`).addClass(this.CLASS_NAMES.isHidden);
+    $(`.${this.CLASS_NAMES.valueList}`).removeClass(this.CLASS_NAMES.isHidden);
 
-    // Empty variation list
-    this.$variationList.find('*').remove();
+    // Empty value list
+    this.$valueList.empty();
 
     $('<div>')
         .addClass(this.CLASS_NAMES.valueHeading)
         .text(this._getDisplayLabelForHue(hue))
-        .appendTo(this.$variationList);
+        .appendTo(this.$valueList);
 
-    // for each variation in the hue
-    for (let value in this.COLORS[hue]) {
-      let color = this.COLORS[hue];
-
-      let $value = $('<div>')
-          .addClass(this.CLASS_NAMES.value)
-          .toggleClass(this.CLASS_NAMES.isWhite, !!color[value].white)
-          .css('background-color', color[value].color)
-          .appendTo(this.$variationList);
-
-      $('<div>')
-          .addClass(this.CLASS_NAMES.valueName)
-          .text(value.toUpperCase())
-          .contextmenu(event => {
-            event.preventDefault();
-            this._showValueContextMenu(color[value].color);
-          })
-          .appendTo($value);
-
-      $('<div>')
-          .addClass(this.CLASS_NAMES.valueHex)
-          .text(color[value].color.toUpperCase())
-          .click(() => electron.clipboard.writeText(color[value].color.toUpperCase()))
-          .appendTo($value);
+    // for each value in the hue
+    let color = this.COLORS[hue];
+    for (let valueName in this.COLORS[hue]) {
+      color[valueName].valueName = valueName;
+      this._buildValueTile(color[valueName])
+          .appendTo(this.$valueList);
     }
 
     // TODO(abhiomkar): use this dom cache instead of re-rendering.
-    this.$_cache[hue] = this.$variationList.children();
+    this.$_cache[hue] = this.$valueList.children();
   }
 
   _onSearchInput(e) {
@@ -235,42 +223,41 @@ class MaterialColors {
 
     if (!value) {
       // search input is empty.
-      this.$searchResult
+      this.$searchResults
         .empty()
         .append(this.$searchHelpText);
-      return;
     } else if (inputColor.isValid()) {
       // search input is valid.
       let hex = inputColor.toHexString();
       let alpha = inputColor.getAlpha();
-      let materialColor = this._getMaterialColorByHex(hex);
+      let materialValue = this._getMaterialValueByHex(hex);
       let $colorTile;
-      this.$searchResult.empty();
+      this.$searchResults.empty();
 
-      if (materialColor) {
+      if (materialValue) {
         // Material color.
 
         // update material color with hex and alpha.
-        Object.assign(materialColor, {hex});
+        Object.assign(materialValue, {hex});
         if (alpha) {
-          Object.assign(materialColor, {alpha});
+          Object.assign(materialValue, {alpha});
         }
 
-        this._getColorTile(materialColor)
-          .appendTo(this.$searchResult);
+        this._buildValueTile(materialValue, true)
+            .appendTo(this.$searchResults);
       } else {
         // Non-material color.
-        this._getColorTile({ hex, alpha, white: inputColor.isDark() })
-          .appendTo(this.$searchResult);
+        this._buildValueTile({ hex, alpha, white: inputColor.isDark() }, true)
+            .appendTo(this.$searchResults);
       }
     } else {
       // TODO(abhiomkar): handle invalid search input.
     }
   }
 
-  _showValueContextMenu(color) {
-    let withHash = color;
-    let noHash = color.replace(/#/g, '');
+  _showValueContextMenu(hexValue) {
+    let withHash = hexValue;
+    let noHash = hexValue.replace(/#/g, '');
     let rgb = `rgb(${
         parseInt(noHash.substring(0, 2), 16)}, ${
         parseInt(noHash.substring(2, 4), 16)}, ${
@@ -289,47 +276,43 @@ class MaterialColors {
     menu.popup(remote.getCurrentWindow());
   }
 
-  _getColorTile(color) {
-    let $colorTile = $('<div>').addClass(this.CLASS_NAMES.colorTile);
+  _buildValueTile(value, largeTile) {
+    let $colorTile = $('<div>')
+        .addClass(this.CLASS_NAMES.colorTile)
+        .toggleClass(this.CLASS_NAMES.isWhite, !!value.white)
+        .toggleClass(this.CLASS_NAMES.isLarge, !!largeTile)
+        .css('background-color', value.hex)
+        .contextmenu(event => {
+          event.preventDefault();
+          this._showValueContextMenu(value.hex);
+        });
 
-    // top left
-    if (color.hue) {
-      $('<span>')
-          .addClass('top-left')
-          .text(color.hue)
+    $('<div>')
+        .addClass(this.CLASS_NAMES.colorTileHex)
+        .text(value.hex.toUpperCase())
+        .click(() => electron.clipboard.writeText(value.hex.toUpperCase()))
+        .appendTo($colorTile);
+
+    if (value.valueName) {
+      $('<div>')
+          .addClass(this.CLASS_NAMES.colorTileValueName)
+          .text(value.valueName.toUpperCase())
           .appendTo($colorTile);
     }
 
-    // top right
-    if (color.alpha && color.alpha < 1) {
+    if (value.hueName) {
+      $('<span>')
+          .addClass(this.CLASS_NAMES.colorTileHueName)
+          .text(value.hueName)
+          .appendTo($colorTile);
+    }
+
+    if (value.alpha && value.alpha < 1) {
         $('<span>')
-            .addClass('top-right')
-            .text('Alpha ' + parseInt(color.alpha * 100))
+          .addClass(this.CLASS_NAMES.colorTileAlpha)
+            .text('Alpha ' + parseInt(value.alpha * 100))
             .appendTo($colorTile);
     }
-
-    // bottom left
-    if (color.variation) {
-      $('<span>')
-          .addClass('bottom-left')
-          .text(color.variation)
-          .appendTo($colorTile);
-    }
-
-    let hexClasses = ['bottom-right', this.CLASS_NAMES.valueHex];
-    if (color.white) {
-      hexClasses.push('is-white');
-    }
-
-    // bottom right
-    $('<span>')
-        .addClass(hexClasses.join(' '))
-        .text(color.hex)
-        .appendTo($colorTile)
-        .click(() => electron.clipboard.writeText(color.hex.toUpperCase()));
-
-    $colorTile.css('background', color.hex);
-    $colorTile.css('color', color.white ? 'white' : 'black');
 
     return $colorTile;
   }
@@ -340,20 +323,22 @@ class MaterialColors {
         .join(' ');
   }
 
-  _getMaterialColorByHex(hex) {
+  _getMaterialValueByHex(hex) {
     let materialColor;
 
-    _.forEach(this.COLORS, function(variations, hue) {
-      _.forEach(variations, function(variationValue, variation) {
-        if (_.lowerCase(variationValue.color) === _.lowerCase(hex)) {
-          materialColor = { hue, variation, white: variationValue.white };
-          // break
-          return false;
-        }
-      });
-    });
+    for (let hue in this.COLORS) {
+      let color = this.COLORS[hue];
 
-    return materialColor;
+      for (let valueName in color) {
+        let value = color[valueName];
+
+        if (value.hex.toLowerCase() === hex.toLowerCase()) {
+          return { hueName: hue, valueName, hex: value.hex, white: value.white };
+        }
+      }
+    }
+
+    return null;
   }
 } // class MaterialColors
 

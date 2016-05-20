@@ -38,7 +38,7 @@ $animTimeFast: $animTimeMedium / 2;
 $animTimeVeryFast: $animTimeMedium / 3;
 $animTimeSlow: $animTimeMedium * 1.5;
 
-$tilePadding: 6px;
+$tilePadding: 8px;
 
 @mixin nodrag {
   &,
@@ -52,7 +52,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  font-family: Roboto;
+  font-family: Roboto, sans-serif;
   font-weight: 400;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -112,7 +112,8 @@ body {
   box-shadow: -1px 0 0 $thinBorderColor inset;
 }
 
-.search, .hue {
+.search-button,
+.hue {
   position: relative;
   flex: 1 0 0;
   cursor: pointer;
@@ -122,12 +123,13 @@ body {
   align-items: center;
   justify-content: center;
 
-  &:hover .search-label, &:hover .hue-label {
+  &:hover .search-label,
+  &:hover .hue-label {
     display: block;
   }
 }
 
-.search {
+.search-button {
   padding: 2px 0;
 
   &.is-selected .search-label {
@@ -135,7 +137,8 @@ body {
   }
 }
 
-.search-label, .hue-label {
+.search-label,
+.hue-label {
   pointer-events: none;
   display: none;
   position: absolute;
@@ -168,62 +171,25 @@ body {
 }
 
 .search-input {
-  height: 20px;
-  width: 127px;
-  border: 0.5px solid #C7C7C7;
+  height: 28px;
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid $thinBorderColor;
   border-radius: 2px;
-  box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.12) inset;
   padding: 4px 8px;
+  margin-bottom: 8px;
   outline: none;
-  font-size: 11px;
-  font-family: 'Roboto';
+  font-size: 10px;
+  font-family: Roboto, sans-serif;
 }
 
-.search-helptext {
+.search-help-text {
   margin-top: 100%;
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   color: $colorBlackTextDisabled;
   padding: 0 10px;
-  line-height: 15px;
-}
-
-.color-tile {
-  position: relative;
-  height: 87px;
-  width: 145px;
-  font-size: 10px;
-  padding: 5px;
-  margin: 10px 8px 0 0;
-  border-radius: 2px;
-  box-sizing: border-box;
-
-  .top-left {
-    position: absolute;
-    top: $tilePadding;
-    left: $tilePadding;
-    text-transform: capitalize;
-  }
-
-  .top-right {
-      position: absolute;
-      top: $tilePadding;
-      right: $tilePadding;
-  }
-
-  .bottom-left {
-      position: absolute;
-      bottom: $tilePadding;
-      left: $tilePadding;
-      text-transform: uppercase;
-  }
-
-  .bottom-right {
-      position: absolute;
-      bottom: 3px;
-      right: 3px;
-      text-transform: uppercase;
-  }
+  line-height: 16px;
 }
 
 .hue-icon {
@@ -242,7 +208,7 @@ body {
   transform: scale(.7);
   transition: transform $animTimeVeryFast ease;
 
-  .search.is-selected & {
+  .search-button.is-selected & {
     transform: scale(1);
   }
 }
@@ -286,16 +252,20 @@ body {
   padding: 12px;
   z-index: 1;
 
-  &.hide { display: none; }
+  &.is-hidden {
+    display: none;
+  }
 }
 
-.variation-list {
+.value-list {
   flex: 1;
   overflow-y: auto;
   padding: 12px;
   z-index: 1;
 
-  &.hide { display: none; }
+  &.is-hidden {
+    display: none;
+  }
 }
 
 .value-heading {
@@ -306,36 +276,89 @@ body {
   margin-bottom: 8px;
 }
 
-.value {
+.color-tile {
+  position: relative;
   box-sizing: border-box;
   margin-bottom: 2px;
-  padding: 8px;
   height: 32px;
   border-radius: 2px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   color: $colorBlackTextPrimary;
 
   &.is-white {
     color: $colorWhiteTextPrimary;
   }
+
+  .color-tile-hex,
+  .color-tile-hue-name,
+  .color-tile-value-name,
+  .color-tile-alpha {
+    position: absolute;
+    display: inline-block;
+  }
+
+  .color-tile-hex,
+  .color-tile-value-name {
+    top: 50%;
+    transform: translate(0, -50%);
+  }
+
+  .color-tile-value-name,
+  .color-tile-hue-name {
+    left: $tilePadding;
+  }
+
+  .color-tile-hex,
+  .color-tile-alpha {
+    right: $tilePadding;
+  }
 }
 
-.value-name {
+.color-tile.is-large {
+  height: 64px;
+
+  .color-tile-hue-name,
+  .color-tile-alpha {
+    top: $tilePadding;
+    transform: none;
+  }
+
+  .color-tile-value-name,
+  .color-tile-hex {
+    top: auto;
+    bottom: $tilePadding;
+    transform: none;
+  }
+}
+
+.color-tile-hue-name {
+  text-transform: capitalize;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.color-tile-alpha {
+  position: absolute;
+  top: $tilePadding;
+  right: $tilePadding;
   font-size: 10px;
   font-weight: 500;
   line-height: 12px;
-  flex: 1;
 }
 
-.value-hex {
+.color-tile-value-name {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.color-tile-hex {
   font-family: 'Roboto Mono', monospace;
   font-size: 10px;
-  line-height: 12px;
+  line-height: 16px;
   font-weight: 500;
   cursor: pointer;
-  padding: 2px;
+  padding: 0 2px;
   border-radius: 2px;
   @include nodrag;
 
