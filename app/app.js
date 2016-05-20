@@ -62,6 +62,7 @@ class MaterialColors {
       valueList: 'value-list',
       notFoundIcon: 'not-found-icon',
       notFoundLabel: 'not-found-label',
+      matchingMaterialLabel: 'matching-material-label',
     };
 
     this._init();
@@ -253,6 +254,18 @@ class MaterialColors {
         // Non-material color.
         this._buildValueTile({ hex, alpha, white: inputColor.isDark() }, true)
             .appendTo(this.$searchResults);
+
+        $('<div>')
+          .addClass(this.CLASS_NAMES.matchingMaterialLabel)
+          .text('Matching Material Color')
+          .appendTo(this.$searchResults);
+
+        // suggest a closest material color.
+        let closestMaterialColorHex = this._getClosestMaterialColor(inputColor);
+        materialValue = this._getMaterialValueByHex(closestMaterialColorHex);
+
+        this._buildValueTile(materialValue, true)
+            .appendTo(this.$searchResults);
       }
     } else {
       // not found
@@ -358,6 +371,44 @@ class MaterialColors {
     }
 
     return null;
+  }
+
+  _getColorDifference(colorAValue, colorBValue) {
+    let colorA = tinycolor(colorAValue);
+    let colorB = tinycolor(colorBValue);
+
+    // Color difference based on CIE76 formula.
+    // Wiki: https://en.wikipedia.org/wiki/Color_difference#CIE76
+    
+    return Math.sqrt(Math.pow(colorA._r - colorB._r, 2) + // red
+                     Math.pow(colorA._g - colorB._g, 2) + // green
+                     Math.pow(colorA._b - colorB._b, 2)); // blue
+  }
+
+  _getAllMaterialColorValues() {
+    let self = this;
+    let allColors = [];
+
+    Object.keys(this.COLORS).map(function(hue) {
+      Object.keys(self.COLORS[hue]).map(function(value) {
+        allColors.push(self.COLORS[hue][value].hex);
+      });
+    });
+
+    return allColors;
+  }
+
+  _getClosestMaterialColor(inputColor) {
+    let self = this;
+    let closestColor = this._getAllMaterialColorValues()
+      .map(function(color) {
+        return { color, difference: self._getColorDifference(inputColor, color) };
+      })
+      .reduce(function(a, b) {
+        return (b.difference < a.difference) ? b : a;
+       }, {difference: Infinity});
+
+    return closestColor && closestColor.color;
   }
 } // class MaterialColors
 
