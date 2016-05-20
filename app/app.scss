@@ -130,7 +130,19 @@ body {
 }
 
 .search-button {
-  padding: 2px 0;
+  svg {
+    fill: $colorBlackTextDisabled;
+    width: 20px;
+    height: 20px;
+  }
+
+  .search-icon {
+    display: flex;
+  }
+
+  &.is-selected svg {
+    fill: $colorBlackTextPrimary;
+  }
 
   &.is-selected .search-label {
     display: none;
@@ -197,20 +209,6 @@ body {
   width: $hueIconWidth;
   height: $hueIconWidth;
   border-radius: 50%;
-}
-
-.search-icon {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  background: url('./assets/ic_search_black_2x.png') no-repeat;
-  background-size: 23px;
-  transform: scale(.7);
-  transition: transform $animTimeVeryFast ease;
-
-  .search-button.is-selected & {
-    transform: scale(1);
-  }
 }
 
 .hue-icon-selector {
