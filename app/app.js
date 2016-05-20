@@ -336,6 +336,7 @@ class MaterialColors {
       $('<span>')
           .addClass(this.CLASS_NAMES.colorTileHueName)
           .text(this._getDisplayLabelForHue(value.hueName))
+          .click(() => this._selectHue(value.hueName))
           .appendTo($colorTile);
     }
 

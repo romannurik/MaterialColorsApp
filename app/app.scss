@@ -332,6 +332,8 @@ body {
   font-size: 12px;
   font-weight: 500;
   line-height: 16px;
+  cursor: pointer;
+  @include nodrag;
 }
 
 .color-tile-alpha {
