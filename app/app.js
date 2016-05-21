@@ -33,6 +33,13 @@ class MaterialColors {
     this.$_cache = {};
 
     this.COLORS = require('./colors.js');
+
+    this._allMaterialValues = [];
+    Object.keys(this.COLORS).map(hueName =>
+        Object.keys(this.COLORS[hueName]).map(valueName =>
+            this._allMaterialValues.push(
+                Object.assign({ hueName, valueName }, this.COLORS[hueName][valueName]))));
+
     this.CLASS_NAMES = {
       closeButton: 'close-button',
       colorTile: 'color-tile',
@@ -91,7 +98,7 @@ class MaterialColors {
   }
 
   _buildUi() {
-    let firstHue;
+    let firstHueName;
 
     let $searchButton = $('<div>')
         .addClass(`${this.CLASS_NAMES.searchButton}`)
@@ -111,15 +118,15 @@ class MaterialColors {
         .text('Search')
         .appendTo($searchButton);
 
-    for (let hue in this.COLORS) {
-      let color = this.COLORS[hue];
-      if (!firstHue) {
-        firstHue = hue;
+    for (let hueName in this.COLORS) {
+      let color = this.COLORS[hueName];
+      if (!firstHueName) {
+        firstHueName = hueName;
       }
 
       let $hue = $('<div>')
-          .addClass(`${this.CLASS_NAMES.hue} ${this.CLASS_NAMES.hue}-${hue}`)
-          .click(() => this._selectHue(hue))
+          .addClass(`${this.CLASS_NAMES.hue} ${this.CLASS_NAMES.hue}-${hueName}`)
+          .click(() => this._selectHue(hueName))
           .appendTo(this.$sidebar);
 
       let $hueIcon = $('<div>')
@@ -134,11 +141,11 @@ class MaterialColors {
 
       $('<div>')
           .addClass(this.CLASS_NAMES.hueLabel)
-          .text(this._getDisplayLabelForHue(hue))
+          .text(this._getDisplayLabelForHue(hueName))
           .appendTo($hue);
     }
 
-    this._selectHue(firstHue);
+    this._selectHue(firstHueName);
   }
 
   _selectSearchMode() {
@@ -190,13 +197,13 @@ class MaterialColors {
     }
   }
 
-  _selectHue(hue) {
+  _selectHue(hueName) {
     // Toggle selected hue
     this.$sidebar.find(`.${this.CLASS_NAMES.hue}.${this.CLASS_NAMES.isSelected}`)
         .removeClass(this.CLASS_NAMES.isSelected);
     this.$sidebar.find(`.${this.CLASS_NAMES.searchButton}`)
         .removeClass(this.CLASS_NAMES.isSelected);
-    this.$sidebar.find(`.${this.CLASS_NAMES.hue}-${hue}`)
+    this.$sidebar.find(`.${this.CLASS_NAMES.hue}-${hueName}`)
         .addClass(this.CLASS_NAMES.isSelected);
 
     $(`.${this.CLASS_NAMES.searchSection}`).addClass(this.CLASS_NAMES.isHidden);
@@ -207,19 +214,19 @@ class MaterialColors {
 
     $('<div>')
         .addClass(this.CLASS_NAMES.valueHeading)
-        .text(this._getDisplayLabelForHue(hue))
+        .text(this._getDisplayLabelForHue(hueName))
         .appendTo(this.$valueList);
 
     // for each value in the hue
-    let color = this.COLORS[hue];
-    for (let valueName in this.COLORS[hue]) {
+    let color = this.COLORS[hueName];
+    for (let valueName in this.COLORS[hueName]) {
       color[valueName].valueName = valueName;
       this._buildValueTile(color[valueName])
           .appendTo(this.$valueList);
     }
 
     // TODO(abhiomkar): use this dom cache instead of re-rendering.
-    this.$_cache[hue] = this.$valueList.children();
+    this.$_cache[hueName] = this.$valueList.children();
   }
 
   _onSearchInput(e) {
@@ -235,21 +242,20 @@ class MaterialColors {
       // search input is valid.
       let hex = inputColor.toHexString();
       let alpha = inputColor.getAlpha();
-      let materialValue = this._getMaterialValueByHex(hex);
+      let materialValues = this._getMaterialValuesByHex(hex);
       let $colorTile;
       this.$searchResults.empty();
 
-      if (materialValue) {
-        // Material color.
+      if (materialValues.length) {
+        // material color
+        materialValues.forEach(value => {
+          // update material color with alpha.
+          if (alpha) {
+            value = Object.assign({alpha}, value);
+          }
 
-        // update material color with hex and alpha.
-        Object.assign(materialValue, {hex});
-        if (alpha) {
-          Object.assign(materialValue, {alpha});
-        }
-
-        this._buildValueTile(materialValue, true)
-            .appendTo(this.$searchResults);
+          this._buildValueTile(value, true).appendTo(this.$searchResults);
+        });
       } else {
         // Non-material color.
         this._buildValueTile({ hex, alpha, white: inputColor.isDark() }, true)
@@ -354,28 +360,10 @@ class MaterialColors {
     return $colorTile;
   }
 
-  _getDisplayLabelForHue(hue) {
-    return hue.split('-')
+  _getDisplayLabelForHue(hueName) {
+    return hueName.split('-')
         .map(s => s.charAt(0).toUpperCase() + s.substring(1))
         .join(' ');
-  }
-
-  _getMaterialValueByHex(hex) {
-    let materialColor;
-
-    for (let hue in this.COLORS) {
-      let color = this.COLORS[hue];
-
-      for (let valueName in color) {
-        let value = color[valueName];
-
-        if (value.hex.toLowerCase() === hex.toLowerCase()) {
-          return { hueName: hue, valueName, hex: value.hex, white: value.white };
-        }
-      }
-    }
-
-    return null;
   }
 
   _getColorDifference(colorAValue, colorBValue) {
@@ -390,23 +378,17 @@ class MaterialColors {
                      Math.pow(colorA._b - colorB._b, 2)); // blue
   }
 
-  _getAllMaterialValues() {
-    let self = this;
-    let allValues = [];
-
-    Object.keys(this.COLORS).map(hue =>
-        Object.keys(self.COLORS[hue]).map(value =>
-            allValues.push(self.COLORS[hue][value])));
-
-    return allValues;
+  _getMaterialValuesByHex(hex) {
+    return this._allMaterialValues
+        .filter(value => value.hex.toLowerCase() === hex.toLowerCase());
   }
 
   _getCloseMaterialValues(inputColor) {
-    return this._getAllMaterialValues()
+    return this._allMaterialValues
         .map(value => ({ value, difference: this._getColorDifference(inputColor, value.hex) }))
         .sort((a, b) => (a.difference - b.difference))
         .slice(0, 3)
-        .map(obj => this._getMaterialValueByHex(obj.value.hex));
+        .map(obj => obj.value);
   }
 } // class MaterialColors
 
