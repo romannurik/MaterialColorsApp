@@ -343,7 +343,8 @@ body {
   right: $tilePadding;
   font-size: 10px;
   font-weight: 500;
-  line-height: 12px;
+  line-height: 16px;
+  margin-top: 1px; // baseline align
 }
 
 .color-tile-value-name {

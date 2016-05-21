@@ -95,6 +95,11 @@ class MaterialColors {
           .click(() => electron.ipcRenderer.send('install-update'))
           .appendTo('body');
     });
+
+    $(window).on('keydown keyup', event =>
+        $(`.${this.CLASS_NAMES.colorTile}`).trigger('refresh-tile', {
+          hideHash: !!event.altKey
+        }));
   }
 
   _buildUi() {
@@ -329,11 +334,14 @@ class MaterialColors {
           this._showValueContextMenu(value.hex, value.alpha);
         });
 
-    $('<div>')
+    let $hex = $('<div>')
         .addClass(this.CLASS_NAMES.colorTileHex)
         .text(value.hex.toUpperCase())
-        .click(() => electron.clipboard.writeText(value.hex.toUpperCase()))
+        .click(() => electron.clipboard.writeText($hex.text()))
         .appendTo($colorTile);
+
+    $colorTile.on('refresh-tile', (event, opts) =>
+        $hex.text(value.hex.toUpperCase().substring((opts && opts.hideHash) ? 1 : 0)));
 
     if (value.valueName) {
       $('<div>')
