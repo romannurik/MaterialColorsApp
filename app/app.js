@@ -257,15 +257,12 @@ class MaterialColors {
 
         $('<div>')
             .addClass(this.CLASS_NAMES.matchingMaterialLabel)
-            .text('Similar Material colors')
+            .text('Nearest Material colors')
             .appendTo(this.$searchResults);
 
-        // suggest a closest material color.
-        let closestMaterialColorHex = this._getClosestMaterialColor(inputColor);
-        materialValue = this._getMaterialValueByHex(closestMaterialColorHex);
-
-        this._buildValueTile(materialValue, true)
-            .appendTo(this.$searchResults);
+        // suggest a closest material color
+        this._getCloseMaterialValues(inputColor)
+            .forEach(val => this._buildValueTile(val, true).appendTo(this.$searchResults));
       }
     } else {
       // not found
@@ -287,18 +284,25 @@ class MaterialColors {
     }
   }
 
-  _showValueContextMenu(hexValue) {
+  _showValueContextMenu(hexValue, alpha) {
     let withHash = hexValue;
     let noHash = hexValue.replace(/#/g, '');
-    let rgb = `rgb(${
-        parseInt(noHash.substring(0, 2), 16)}, ${
-        parseInt(noHash.substring(2, 4), 16)}, ${
-        parseInt(noHash.substring(4, 6), 16)})`;
 
     let formats = [];
     formats.push(withHash);
     formats.push(noHash);
-    formats.push(rgb);
+    formats.push(`rgb(${
+        parseInt(noHash.substring(0, 2), 16)}, ${
+        parseInt(noHash.substring(2, 4), 16)}, ${
+        parseInt(noHash.substring(4, 6), 16)})`);
+
+    if (alpha && alpha < 1) {
+      formats.push(`rgba(${
+          parseInt(noHash.substring(0, 2), 16)}, ${
+          parseInt(noHash.substring(2, 4), 16)}, ${
+          parseInt(noHash.substring(4, 6), 16)}, .${
+          (alpha * 100).toFixed(0)})`);
+    }
 
     let menu = Menu.buildFromTemplate(
         formats.map(format => ({
@@ -316,7 +320,7 @@ class MaterialColors {
         .css('background-color', value.hex)
         .contextmenu(event => {
           event.preventDefault();
-          this._showValueContextMenu(value.hex);
+          this._showValueContextMenu(value.hex, value.alpha);
         });
 
     $('<div>')
@@ -343,7 +347,7 @@ class MaterialColors {
     if (value.alpha && value.alpha < 1) {
         $('<span>')
           .addClass(this.CLASS_NAMES.colorTileAlpha)
-            .text('Alpha ' + parseInt(value.alpha * 100))
+            .text(`Alpha ${parseInt(value.alpha * 100)}%`)
             .appendTo($colorTile);
     }
 
@@ -386,24 +390,23 @@ class MaterialColors {
                      Math.pow(colorA._b - colorB._b, 2)); // blue
   }
 
-  _getAllMaterialColorValues() {
+  _getAllMaterialValues() {
     let self = this;
-    let allColors = [];
+    let allValues = [];
 
     Object.keys(this.COLORS).map(hue =>
         Object.keys(self.COLORS[hue]).map(value =>
-            allColors.push(self.COLORS[hue][value].hex)));
+            allValues.push(self.COLORS[hue][value])));
 
-    return allColors;
+    return allValues;
   }
 
-  _getClosestMaterialColor(inputColor) {
-    let self = this;
-    let closestColor = this._getAllMaterialColorValues()
-        .map(color => ({ color, difference: self._getColorDifference(inputColor, color) }))
-        .reduce((a, b) => (b.difference < a.difference) ? b : a, {difference: Infinity});
-
-    return closestColor && closestColor.color;
+  _getCloseMaterialValues(inputColor) {
+    return this._getAllMaterialValues()
+        .map(value => ({ value, difference: this._getColorDifference(inputColor, value.hex) }))
+        .sort((a, b) => (a.difference - b.difference))
+        .slice(0, 3)
+        .map(obj => this._getMaterialValueByHex(obj.value.hex));
   }
 } // class MaterialColors
 
