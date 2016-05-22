@@ -422,13 +422,14 @@ class MaterialColors {
                 .find(`.${this.CLASS_NAMES.searchInput}`)
 
             $searchInput
-                .val(color.toString())
+                .val(clipboardText)
                 .trigger('input');
 
             setTimeout(() => {
                 $searchInput.select();
             }, 100);
         }
+        this._lastCopiedColor = clipboardText;
     }
   }
 } // class MaterialColors
