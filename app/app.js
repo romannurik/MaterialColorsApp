@@ -322,8 +322,8 @@ class MaterialColors {
         formats.map(format => ({
           label: `Copy ${format}`,
           click: () => {
-              electron.clipboard.writeText(format);
-              this._lastCopiedColor = format;
+            electron.clipboard.writeText(format);
+            this._lastCopiedColor = format;
           }
         })));
     menu.popup(remote.getCurrentWindow());
@@ -413,23 +413,21 @@ class MaterialColors {
 
     // if not previously copied from app itself.
     if (clipboardText !== this._lastCopiedColor) {
-        let color = tinycolor(clipboardText);
+      let color = tinycolor(clipboardText);
 
-        if (color.isValid()) {
-            this._selectSearchMode();
+      if (color.isValid()) {
+        this._selectSearchMode();
 
-            let $searchInput = this.$searchSection
-                .find(`.${this.CLASS_NAMES.searchInput}`)
+        let $searchInput = this.$searchSection.find(`.${this.CLASS_NAMES.searchInput}`);
 
-            $searchInput
-                .val(clipboardText)
-                .trigger('input');
+        $searchInput
+            .val(clipboardText)
+            .trigger('input');
 
-            setTimeout(() => {
-                $searchInput.select();
-            }, 100);
-        }
-        this._lastCopiedColor = clipboardText;
+        setTimeout(() => $searchInput.select(), 100);
+      }
+
+      this._lastCopiedColor = clipboardText;
     }
   }
 } // class MaterialColors
