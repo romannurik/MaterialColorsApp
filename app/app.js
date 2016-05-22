@@ -23,7 +23,7 @@ const remote = electron.remote;
 const Menu = remote.Menu;
 const MenuItem = remote.MenuItem;
 
-const tinycolor = require("tinycolor2");
+const tinycolor = require('tinycolor2');
 
 
 class MaterialColors {
@@ -31,6 +31,7 @@ class MaterialColors {
     this.$sidebar = null;
     this.$contentArea = null;
     this.$_cache = {};
+    this._lastCopiedColor = null;
 
     this.COLORS = require('./colors.js');
 
@@ -100,6 +101,8 @@ class MaterialColors {
         $(`.${this.CLASS_NAMES.colorTile}`).trigger('refresh-tile', {
           hideHash: !!event.altKey
         }));
+
+    $(window).on('focus', () => this._searchColorFromClipboard());
   }
 
   _buildUi() {
@@ -318,7 +321,10 @@ class MaterialColors {
     let menu = Menu.buildFromTemplate(
         formats.map(format => ({
           label: `Copy ${format}`,
-          click: () => electron.clipboard.writeText(format)
+          click: () => {
+              electron.clipboard.writeText(format);
+              this._lastCopiedColor = format;
+          }
         })));
     menu.popup(remote.getCurrentWindow());
   }
@@ -337,7 +343,10 @@ class MaterialColors {
     let $hex = $('<div>')
         .addClass(this.CLASS_NAMES.colorTileHex)
         .text(value.hex.toUpperCase())
-        .click(() => electron.clipboard.writeText($hex.text()))
+        .click(() => {
+            electron.clipboard.writeText($hex.text());
+            this._lastCopiedColor = $hex.text();
+        })
         .appendTo($colorTile);
 
     $colorTile.on('refresh-tile', (event, opts) =>
@@ -397,6 +406,31 @@ class MaterialColors {
         .sort((a, b) => (a.difference - b.difference))
         .slice(0, 3)
         .map(obj => obj.value);
+  }
+
+  _searchColorFromClipboard() {
+    let clipboardText = electron.clipboard.readText();
+
+    // if not previously copied from app itself.
+    if (clipboardText !== this._lastCopiedColor) {
+        let color = tinycolor(clipboardText);
+
+        if (color.isValid()) {
+            this._selectSearchMode();
+
+            let $searchInput = this.$searchSection
+                .find(`.${this.CLASS_NAMES.searchInput}`)
+
+            $searchInput
+                .val(clipboardText)
+                .trigger('input');
+
+            setTimeout(() => {
+                $searchInput.select();
+            }, 100);
+        }
+        this._lastCopiedColor = clipboardText;
+    }
   }
 } // class MaterialColors
 
