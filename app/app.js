@@ -24,6 +24,12 @@ const Menu = remote.Menu;
 const MenuItem = remote.MenuItem;
 
 const tinycolor = require('tinycolor2');
+const nunjucks = require('nunjucks');
+const fs = require('fs');
+const path = require('path');
+const yaml = require('js-yaml');
+
+const CONFIG_FILENAME = '.materialcolorapp.yaml';
 
 
 class MaterialColors {
@@ -82,6 +88,7 @@ class MaterialColors {
     this.$searchSection = $(`.${this.CLASS_NAMES.searchSection}`);
     this.$valueList = $(`.${this.CLASS_NAMES.valueList}`);
 
+    this._CONFIG = this._loadConfig();
     this._buildUi();
 
     $(`.${this.CLASS_NAMES.closeButton}`).click(() => {
@@ -229,6 +236,7 @@ class MaterialColors {
     let color = this.COLORS[hueName];
     for (let valueName in this.COLORS[hueName]) {
       color[valueName].valueName = valueName;
+      color[valueName].hueName = hueName;
       this._buildValueTile(color[valueName])
           .appendTo(this.$valueList);
     }
@@ -330,6 +338,11 @@ class MaterialColors {
   }
 
   _buildValueTile(value, largeTile) {
+    const ALPHA = value.alpha && value.alpha.toString();
+    const HEX = value.hex;
+    const VALUE = value.valueName && value.valueName.toString();
+    const HUE = value.hueName && value.hueName.toString();
+
     let $colorTile = $('<div>')
         .addClass(this.CLASS_NAMES.colorTile)
         .toggleClass(this.CLASS_NAMES.isWhite, !!value.white)
@@ -356,10 +369,17 @@ class MaterialColors {
       $('<div>')
           .addClass(this.CLASS_NAMES.colorTileValueName)
           .text(value.valueName.toUpperCase())
+          .click(() => {
+            let copyText = nunjucks.renderString(
+                this._CONFIG.value_copy_format || "--{{HUE}}-{{VALUE}}",
+                {ALPHA, HEX, VALUE, HUE});
+            electron.clipboard.writeText(copyText);
+            this._lastCopiedColor = copyText;
+          })
           .appendTo($colorTile);
     }
 
-    if (value.hueName) {
+    if (value.hueName && largeTile) {
       $('<span>')
           .addClass(this.CLASS_NAMES.colorTileHueName)
           .text(this._getDisplayLabelForHue(value.hueName))
@@ -367,7 +387,7 @@ class MaterialColors {
           .appendTo($colorTile);
     }
 
-    if (value.alpha && value.alpha < 1) {
+    if (value.alpha && value.alpha < 1 && largeTile) {
         $('<span>')
           .addClass(this.CLASS_NAMES.colorTileAlpha)
             .text(`Alpha ${parseInt(value.alpha * 100)}%`)
@@ -429,6 +449,21 @@ class MaterialColors {
 
       this._lastCopiedColor = clipboardText;
     }
+  }
+
+  _loadConfig() {
+    const configFilePath = path.join(this._getHomeDirectory(), CONFIG_FILENAME);
+
+    try {
+      return yaml.safeLoad(fs.readFileSync(configFilePath, 'utf8')) || {};
+    } catch(e) {
+      // return empty config if config file doesn't exists.
+      return {};
+    }
+  }
+
+  _getHomeDirectory() {
+    return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
   }
 } // class MaterialColors
 
