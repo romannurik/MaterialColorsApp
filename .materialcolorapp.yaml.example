@@ -1,0 +1,2 @@
+value_copy_format:
+    "MATERIAL_COLOR_{{HUE | upper | replace('-', '_')}}_{{VALUE | upper}}"
