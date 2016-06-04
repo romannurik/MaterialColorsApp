@@ -475,6 +475,15 @@ class MaterialColors {
     let replacer;
     let textTransform;
 
+    data.hueName = data.hueName || '';
+    data.valueName = data.valueName || '';
+
+    if (data.alpha) {
+      data.alpha = (data.alpha * 100).toFixed(0);
+    } else {
+      data.alpha = '100';
+    }
+
     // is it a valid transform?
     if (transform && transform.length <= 3 && transform.match(/\w?(x|X|Xx)/)) {
       transform = transform.trim();
@@ -483,50 +492,46 @@ class MaterialColors {
       if (!transform.toLowerCase().startsWith('x')) {
         replacer = transform[0];
         textTransform = transform.slice(1);
+      } else {
+        textTransform = transform;
       }
 
-      // {{hueName: string, valueName: string, alpha: float}}
-      Object.keys(data).forEach((key) => {
-        data[key] = data[key] || '';
-        if (key === 'alpha') {
-          data[key] = (data[key] * 100).toFixed(0);
-        }
+      // text transform, lower, upper or capitalize
+      if (textTransform === 'x') {
+        data.hueName = data.hueName.toLowerCase();
+        data.valueName = data.valueName.toLowerCase();
+      } else if (textTransform === 'X') {
+        data.hueName = data.hueName.toUpperCase();
+        data.valueName = data.valueName.toUpperCase();
+      } else if (textTransform === 'Xx') {
+        // capitalize text
+        data.hueName = this._capitalize(data.hueName);
+        data.valueName = this._capitalize(data.valueName);
+      }
 
-        // text transform, lower, upper or capitalize
-        if (textTransform === 'x') {
-          data[key] = data[key].toLowerCase();
-        } else if (textTransform === 'X') {
-          data[key] = data[key].toUpperCase();
-        } else if (textTransform === 'Xx') {
-          // capitalize text
-          data[key] = data[key].replace(/(?:^|(\s|\-))\S/g, (s) => { return s.toUpperCase(); });
-        }
-
-        // Replacer
-        // d - delete spaces between variables (eg: LightBlue)
-        // * - replace spaces between variables with any character (eg: light-blue)
-        // if no replacer found add a space between variable if any (eg: Light Blue)
-        if (replacer === 'd') {
-          data[key] = data[key].replace('-', '');
-        }
-        if (replacer) {
-          data[key] = data[key].replace('-', replacer);
-        } else {
-          data[key] = data[key].replace('-', ' ');
-        }
-      });
+      // Replacer
+      // d - delete spaces between the hue name (eg: LightBlue)
+      // * - replace spaces between variables with any character (eg: light-blue)
+      // if no replacer found add a space between variable if any (eg: Light Blue)
+      if (replacer === 'd') {
+        data.hueName = data.hueName.replace('-', '');
+      }
+      if (replacer) {
+        data.hueName = data.hueName.replace('-', replacer);
+      } else {
+        data.hueName = data.hueName.replace('-', ' ');
+      }
     }
 
-    string = string.replace('$HUE', data.hueName || '');
-    string = string.replace('$VALUE', data.valueName || '');
-    string = string.replace('$ALPHA', data.alpha || '');
+    string = string.replace(/\$HUE/g, data.hueName)
+        .replace(/\$VALUE/g, data.valueName)
+        .replace(/\$ALPHA/g, data.alpha);
 
     return string;
   }
 
   _loadConfig() {
-    // const configFilePath = path.join(electron.app.getPath('home'), CONFIG_FILENAME);
-    let configFilePath = '/Users/abhiomkar/.materialcolorapp.json';
+    const configFilePath = path.join(this._getHomeDirectory(), CONFIG_FILENAME);
 
     fs.readFile(configFilePath, (err, data) => {
       try {
@@ -544,6 +549,14 @@ class MaterialColors {
         return false;
       }
     });
+  }
+
+  _capitalize(string) {
+    return string.replace(/(?:^|(\s|\-))\S/g, (s) => { return s.toUpperCase(); });
+  }
+
+  _getHomeDirectory() {
+    return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
   }
 } // class MaterialColors
 
