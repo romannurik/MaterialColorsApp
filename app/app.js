@@ -511,12 +511,11 @@ class MaterialColors {
 
       // Replacer
       // d - delete spaces between the hue name (eg: LightBlue)
-      // * - replace spaces between variables with any character (eg: light-blue)
-      // if no replacer found add a space between variable if any (eg: Light Blue)
+      // * - replace spaces between hue name with any character (eg: LIGHT_BLUE)
+      // if no replacer found add a space between hue name if any (eg: Light Blue)
       if (replacer === 'd') {
         data.hueName = data.hueName.replace('-', '');
-      }
-      if (replacer) {
+      } else if (replacer) {
         data.hueName = data.hueName.replace('-', replacer);
       } else {
         data.hueName = data.hueName.replace('-', ' ');
