@@ -1,7 +1,0 @@
-# Configurations in YAML Syntax Only (https://en.wikipedia.org/wiki/YAML)
-
-value_copy_format:
-    # Accepts nunjucks template format: https://mozilla.github.io/nunjucks/templating.html
-    # allowed variables HUE, VALUE, ALPHA & HEX.
-    # Example: Below copy format copies 'MATERIAL_COLOR_CYAN_A400' to clipboard.
-    "MATERIAL_COLOR_{{HUE | upper | replace('-', '_')}}_{{VALUE | upper}}"
