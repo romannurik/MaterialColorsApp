@@ -24,6 +24,11 @@ const Menu = remote.Menu;
 const MenuItem = remote.MenuItem;
 
 const tinycolor = require('tinycolor2');
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+
+const CONFIG_FILENAME = '.materialcolorapp.json';
 
 
 class MaterialColors {
@@ -32,6 +37,11 @@ class MaterialColors {
     this.$contentArea = null;
     this.$_cache = {};
     this._lastCopiedColor = null;
+    // default value of _CONFIG
+    this._CONFIG = [{
+      format: "$HUE $VALUE",
+      transform: "Xx",
+    }];
 
     this.COLORS = require('./colors.js');
 
@@ -82,6 +92,7 @@ class MaterialColors {
     this.$searchSection = $(`.${this.CLASS_NAMES.searchSection}`);
     this.$valueList = $(`.${this.CLASS_NAMES.valueList}`);
 
+    this._loadConfig();
     this._buildUi();
 
     $(`.${this.CLASS_NAMES.closeButton}`).click(() => {
@@ -229,6 +240,7 @@ class MaterialColors {
     let color = this.COLORS[hueName];
     for (let valueName in this.COLORS[hueName]) {
       color[valueName].valueName = valueName;
+      color[valueName].hueName = hueName;
       this._buildValueTile(color[valueName])
           .appendTo(this.$valueList);
     }
@@ -298,7 +310,7 @@ class MaterialColors {
     }
   }
 
-  _showValueContextMenu(hexValue, alpha) {
+  _showValueContextMenu(hexValue, hueName, valueName, alpha) {
     let withHash = hexValue;
     let noHash = hexValue.replace(/#/g, '');
 
@@ -318,6 +330,10 @@ class MaterialColors {
           (alpha * 100).toFixed(0)})`);
     }
 
+    this._CONFIG.forEach((item) => {
+      formats.push(this._renderString(item.format, item.transform, {hueName, valueName, alpha}));
+    });
+
     let menu = Menu.buildFromTemplate(
         formats.map(format => ({
           label: `Copy ${format}`,
@@ -330,14 +346,29 @@ class MaterialColors {
   }
 
   _buildValueTile(value, largeTile) {
+    let tileBackground;
+    let isWhite;
+
+    if (value.alpha) {
+      tileBackground = tinycolor(value.hex).setAlpha(value.alpha).toString();
+    } else {
+      tileBackground = value.hex;
+    }
+
+    if (value.alpha && value.alpha < 0.5) {
+      isWhite = false;
+    } else {
+      isWhite = value.white;
+    }
+
     let $colorTile = $('<div>')
         .addClass(this.CLASS_NAMES.colorTile)
-        .toggleClass(this.CLASS_NAMES.isWhite, !!value.white)
+        .toggleClass(this.CLASS_NAMES.isWhite, !!isWhite)
         .toggleClass(this.CLASS_NAMES.isLarge, !!largeTile)
-        .css('background-color', value.hex)
+        .css('background-color', tileBackground)
         .contextmenu(event => {
           event.preventDefault();
-          this._showValueContextMenu(value.hex, value.alpha);
+          this._showValueContextMenu(value.hex, value.hueName, value.valueName, value.alpha);
         });
 
     let $hex = $('<div>')
@@ -356,10 +387,19 @@ class MaterialColors {
       $('<div>')
           .addClass(this.CLASS_NAMES.colorTileValueName)
           .text(value.valueName.toUpperCase())
+          .click(() => {
+            let copyText = this._renderString(this._CONFIG[0].format, this._CONFIG[0].transform, {
+              hueName: value.hueName,
+              valueName: value.valueName,
+              alpha: value.alpha,
+            });
+            electron.clipboard.writeText(copyText);
+            this._lastCopiedColor = copyText;
+          })
           .appendTo($colorTile);
     }
 
-    if (value.hueName) {
+    if (value.hueName && largeTile) {
       $('<span>')
           .addClass(this.CLASS_NAMES.colorTileHueName)
           .text(this._getDisplayLabelForHue(value.hueName))
@@ -367,7 +407,7 @@ class MaterialColors {
           .appendTo($colorTile);
     }
 
-    if (value.alpha && value.alpha < 1) {
+    if (value.alpha && value.alpha < 1 && largeTile) {
         $('<span>')
           .addClass(this.CLASS_NAMES.colorTileAlpha)
             .text(`Alpha ${parseInt(value.alpha * 100)}%`)
@@ -429,6 +469,93 @@ class MaterialColors {
 
       this._lastCopiedColor = clipboardText;
     }
+  }
+
+  _renderString(string, transform, data) {
+    let replacer;
+    let textTransform;
+
+    data.hueName = data.hueName || '';
+    data.valueName = data.valueName || '';
+
+    if (data.alpha) {
+      data.alpha = (data.alpha * 100).toFixed(0);
+    } else {
+      data.alpha = '100';
+    }
+
+    // is it a valid transform?
+    if (transform && transform.length <= 3 && transform.match(/\w?(x|X|Xx)/)) {
+      transform = transform.trim();
+
+      // if transform has replacer character (eg: '-x', '_x')
+      if (!transform.toLowerCase().startsWith('x')) {
+        replacer = transform[0];
+        textTransform = transform.slice(1);
+      } else {
+        textTransform = transform;
+      }
+
+      // text transform, lower, upper or capitalize
+      if (textTransform === 'x') {
+        data.hueName = data.hueName.toLowerCase();
+        data.valueName = data.valueName.toLowerCase();
+      } else if (textTransform === 'X') {
+        data.hueName = data.hueName.toUpperCase();
+        data.valueName = data.valueName.toUpperCase();
+      } else if (textTransform === 'Xx') {
+        // capitalize text
+        data.hueName = this._capitalize(data.hueName);
+        data.valueName = this._capitalize(data.valueName);
+      }
+
+      // Replacer
+      // d - delete spaces between the hue name (eg: LightBlue)
+      // * - replace spaces between hue name with any character (eg: LIGHT_BLUE)
+      // if no replacer found add a space between hue name if any (eg: Light Blue)
+      if (replacer === 'd') {
+        data.hueName = data.hueName.replace('-', '');
+      } else if (replacer) {
+        data.hueName = data.hueName.replace('-', replacer);
+      } else {
+        data.hueName = data.hueName.replace('-', ' ');
+      }
+    }
+
+    string = string.replace(/\$HUE/g, data.hueName)
+        .replace(/\$VALUE/g, data.valueName)
+        .replace(/\$ALPHA/g, data.alpha);
+
+    return string;
+  }
+
+  _loadConfig() {
+    const configFilePath = path.join(this._getHomeDirectory(), CONFIG_FILENAME);
+
+    fs.readFile(configFilePath, (err, data) => {
+      try {
+        const config = JSON.parse(data);
+        assert(Array.isArray(config), 'Config file should be an array with list of all copy formats');
+        assert(config.length > 0, 'Config file should have at least one entry of copy format');
+        assert(config.every((item) => {
+          return (item && item.constructor === Object);
+        }), 'Config file should be an array of objects only.');
+
+        this._CONFIG = config;
+        return true;
+      } catch(e) {
+        console.warn(e);
+        return false;
+      }
+    });
+  }
+
+  _capitalize(string) {
+    return string.replace(/(?:^|(\s|\-))\S/g, (s) => { return s.toUpperCase(); });
+  }
+
+  _getHomeDirectory() {
+    return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
   }
 } // class MaterialColors
 

@@ -314,6 +314,7 @@ body {
 
 .color-tile.is-large {
   height: 88px;
+  margin-bottom: 8px;
 
   .color-tile-hue-name,
   .color-tile-alpha {
@@ -347,17 +348,11 @@ body {
   margin-top: 1px; // baseline align
 }
 
+.color-tile-hex,
 .color-tile-value-name {
   font-size: 10px;
   font-weight: 500;
   line-height: 16px;
-}
-
-.color-tile-hex {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 10px;
-  line-height: 16px;
-  font-weight: 500;
   cursor: pointer;
   padding: 0 2px;
   border-radius: 2px;
@@ -378,6 +373,10 @@ body {
   .is-white &:active {
     background-color: rgba(#fff, .35);
   }
+}
+
+.color-tile-hex {
+  font-family: 'Roboto Mono', monospace;
 }
 
 .update-banner {
