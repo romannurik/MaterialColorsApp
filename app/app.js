@@ -29,6 +29,10 @@ const path = require('path');
 const assert = require('assert');
 
 const CONFIG_FILENAME = '.materialcolorsapp.json';
+const DEFAULT_VALUE_COPY_FORMAT = {
+  format: '$HUE $VALUE',
+  transform: 'Xx',
+};
 
 
 class MaterialColors {
@@ -37,11 +41,7 @@ class MaterialColors {
     this.$contentArea = null;
     this.$_cache = {};
     this._lastCopiedColor = null;
-    // default value of _CONFIG
-    this._CONFIG = [{
-      format: '$HUE $VALUE',
-      transform: 'Xx',
-    }];
+    this._loadConfig();
 
     this.COLORS = require('./colors.js');
 
@@ -92,7 +92,6 @@ class MaterialColors {
     this.$searchSection = $(`.${this.CLASS_NAMES.searchSection}`);
     this.$valueList = $(`.${this.CLASS_NAMES.valueList}`);
 
-    this._loadConfig();
     this._buildUi();
 
     $(`.${this.CLASS_NAMES.closeButton}`).click(() => {
@@ -314,27 +313,31 @@ class MaterialColors {
     let withHash = hexValue;
     let noHash = hexValue.replace(/#/g, '');
 
-    let standardFormats = [];
-    standardFormats.push(withHash);
-    standardFormats.push(noHash);
-    standardFormats.push(`rgb(${
+    let hexFormats = [];
+    hexFormats.push(withHash);
+    hexFormats.push(noHash);
+    hexFormats.push(`rgb(${
         parseInt(noHash.substring(0, 2), 16)}, ${
         parseInt(noHash.substring(2, 4), 16)}, ${
         parseInt(noHash.substring(4, 6), 16)})`);
 
     if (alpha && alpha < 1) {
-      standardFormats.push(`rgba(${
+      hexFormats.push(`rgba(${
           parseInt(noHash.substring(0, 2), 16)}, ${
           parseInt(noHash.substring(2, 4), 16)}, ${
           parseInt(noHash.substring(4, 6), 16)}, .${
           (alpha * 100).toFixed(0)})`);
     }
 
-    let customFormats = [];
-    this._CONFIG.forEach((item) => {
-      customFormats.push(this._renderCustomColorFormatString(item.format, item.transform,
-          {hueName, valueName, alpha}));
-    });
+    let valueFormats = [];
+    if (this._config.copyFormats && this._config.copyFormats.length) {
+      this._config.copyFormats.forEach(format => {
+        valueFormats.push(this._renderCustomColorFormatString(format, {hueName, valueName, alpha}));
+      });
+    } else {
+      valueFormats.push(this._renderCustomColorFormatString(
+          DEFAULT_VALUE_COPY_FORMAT, {hueName, valueName, alpha}));
+    }
 
     let formatToMenuItemTemplate_ = format => ({
       label: `Copy ${format}`,
@@ -345,9 +348,9 @@ class MaterialColors {
     });
 
     let menu = Menu.buildFromTemplate([]
-        .concat(standardFormats.map(formatToMenuItemTemplate_))
+        .concat(hexFormats.map(formatToMenuItemTemplate_))
         .concat([{type:'separator'}])
-        .concat(customFormats.map(formatToMenuItemTemplate_)));
+        .concat(valueFormats.map(formatToMenuItemTemplate_)));
     menu.popup(remote.getCurrentWindow());
   }
 
@@ -394,14 +397,14 @@ class MaterialColors {
           .addClass(this.CLASS_NAMES.colorTileValueName)
           .text(value.valueName.toUpperCase())
           .click(() => {
-            let copyText = this._renderCustomColorFormatString(
-                  this._CONFIG[0].format,
-                  this._CONFIG[0].transform,
-                  {
-                    hueName: value.hueName,
-                    valueName: value.valueName,
-                    alpha: value.alpha,
-                  });
+            let valueCopyFormat = (this._config.copyFormats && this._config.copyFormats.length)
+                ? this._config.copyFormats[0]
+                : DEFAULT_VALUE_COPY_FORMAT;
+            let copyText = this._renderCustomColorFormatString(valueCopyFormat, {
+              hueName: value.hueName,
+              valueName: value.valueName,
+              alpha: value.alpha,
+            });
             electron.clipboard.writeText(copyText);
             this._lastCopiedColor = copyText;
           })
@@ -480,9 +483,12 @@ class MaterialColors {
     }
   }
 
-  _renderCustomColorFormatString(string, transform, data) {
+  _renderCustomColorFormatString(format, data) {
     let replacer;
     let textTransform;
+
+    let string = format.format;
+    let transform = format.transform;
 
     data.hueName = data.hueName || '';
     data.valueName = data.valueName || '';
@@ -541,21 +547,14 @@ class MaterialColors {
   _loadConfig() {
     const configFilePath = path.join(this._getHomeDirectory(), CONFIG_FILENAME);
 
+    this._config = {};
     fs.readFile(configFilePath, (err, data) => {
       if (!data) {
         return;
       }
 
       try {
-        const config = JSON.parse(data);
-        assert(Array.isArray(config),
-            'Config file should be an array with list of all copy formats');
-        assert(config.length > 0,
-            'Config file should have at least one entry of copy format');
-        assert(config.every(item => item && item.constructor === Object),
-            'Config file should be an array of objects only.');
-
-        this._CONFIG = config;
+        this._config = JSON.parse(data);
         return true;
 
       } catch (e) {

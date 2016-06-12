@@ -1,14 +1,16 @@
-[
-  {
-    "format": "MATERIAL_COLOR_$HUE_$VALUE",
-    "transform": "_X"
-  },
-  {
-    "format": "$material-color('$HUE', '$VALUE');",
-    "transform": "-x"
-  },
-  {
-    "format": "$alpha($color$HUE$VALUE, '$ALPHA');",
-    "transform": "dXx"
-  }
-]
+{
+  "copyFormats": [
+    {
+      "format": "MATERIAL_COLOR_$HUE_$VALUE",
+      "transform": "_X"
+    },
+    {
+      "format": "$material-color('$HUE', '$VALUE');",
+      "transform": "-x"
+    },
+    {
+      "format": "$alpha($color$HUE$VALUE, '$ALPHA');",
+      "transform": "dXx"
+    }
+  ]
+}
