@@ -98,6 +98,9 @@ app.on('activate', () => {
 electron.ipcMain.on('update-ui-mode', updateUiMode);
 
 
+electron.ipcMain.on('get-home-directory', event => event.returnValue = app.getPath('home'));
+
+
 function updateUiMode() {
   // Build or teardown tray
   if (isTrayMode) {

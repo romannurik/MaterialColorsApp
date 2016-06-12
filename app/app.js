@@ -28,7 +28,7 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
-const CONFIG_FILENAME = '.materialcolorapp.json';
+const CONFIG_FILENAME = '.materialcolorsapp.json';
 
 
 class MaterialColors {
@@ -39,8 +39,8 @@ class MaterialColors {
     this._lastCopiedColor = null;
     // default value of _CONFIG
     this._CONFIG = [{
-      format: "$HUE $VALUE",
-      transform: "Xx",
+      format: '$HUE $VALUE',
+      transform: 'Xx',
     }];
 
     this.COLORS = require('./colors.js');
@@ -314,34 +314,40 @@ class MaterialColors {
     let withHash = hexValue;
     let noHash = hexValue.replace(/#/g, '');
 
-    let formats = [];
-    formats.push(withHash);
-    formats.push(noHash);
-    formats.push(`rgb(${
+    let standardFormats = [];
+    standardFormats.push(withHash);
+    standardFormats.push(noHash);
+    standardFormats.push(`rgb(${
         parseInt(noHash.substring(0, 2), 16)}, ${
         parseInt(noHash.substring(2, 4), 16)}, ${
         parseInt(noHash.substring(4, 6), 16)})`);
 
     if (alpha && alpha < 1) {
-      formats.push(`rgba(${
+      standardFormats.push(`rgba(${
           parseInt(noHash.substring(0, 2), 16)}, ${
           parseInt(noHash.substring(2, 4), 16)}, ${
           parseInt(noHash.substring(4, 6), 16)}, .${
           (alpha * 100).toFixed(0)})`);
     }
 
+    let customFormats = [];
     this._CONFIG.forEach((item) => {
-      formats.push(this._renderString(item.format, item.transform, {hueName, valueName, alpha}));
+      customFormats.push(this._renderCustomColorFormatString(item.format, item.transform,
+          {hueName, valueName, alpha}));
     });
 
-    let menu = Menu.buildFromTemplate(
-        formats.map(format => ({
-          label: `Copy ${format}`,
-          click: () => {
-            electron.clipboard.writeText(format);
-            this._lastCopiedColor = format;
-          }
-        })));
+    let formatToMenuItemTemplate_ = format => ({
+      label: `Copy ${format}`,
+      click: () => {
+        electron.clipboard.writeText(format);
+        this._lastCopiedColor = format;
+      }
+    });
+
+    let menu = Menu.buildFromTemplate([]
+        .concat(standardFormats.map(formatToMenuItemTemplate_))
+        .concat([{type:'separator'}])
+        .concat(customFormats.map(formatToMenuItemTemplate_)));
     menu.popup(remote.getCurrentWindow());
   }
 
@@ -388,11 +394,14 @@ class MaterialColors {
           .addClass(this.CLASS_NAMES.colorTileValueName)
           .text(value.valueName.toUpperCase())
           .click(() => {
-            let copyText = this._renderString(this._CONFIG[0].format, this._CONFIG[0].transform, {
-              hueName: value.hueName,
-              valueName: value.valueName,
-              alpha: value.alpha,
-            });
+            let copyText = this._renderCustomColorFormatString(
+                  this._CONFIG[0].format,
+                  this._CONFIG[0].transform,
+                  {
+                    hueName: value.hueName,
+                    valueName: value.valueName,
+                    alpha: value.alpha,
+                  });
             electron.clipboard.writeText(copyText);
             this._lastCopiedColor = copyText;
           })
@@ -471,7 +480,7 @@ class MaterialColors {
     }
   }
 
-  _renderString(string, transform, data) {
+  _renderCustomColorFormatString(string, transform, data) {
     let replacer;
     let textTransform;
 
@@ -505,8 +514,8 @@ class MaterialColors {
         data.valueName = data.valueName.toUpperCase();
       } else if (textTransform === 'Xx') {
         // capitalize text
-        data.hueName = this._capitalize(data.hueName);
-        data.valueName = this._capitalize(data.valueName);
+        data.hueName = this._sentenceCase(data.hueName);
+        data.valueName = this._sentenceCase(data.valueName);
       }
 
       // Replacer
@@ -533,29 +542,35 @@ class MaterialColors {
     const configFilePath = path.join(this._getHomeDirectory(), CONFIG_FILENAME);
 
     fs.readFile(configFilePath, (err, data) => {
+      if (!data) {
+        return;
+      }
+
       try {
         const config = JSON.parse(data);
-        assert(Array.isArray(config), 'Config file should be an array with list of all copy formats');
-        assert(config.length > 0, 'Config file should have at least one entry of copy format');
-        assert(config.every((item) => {
-          return (item && item.constructor === Object);
-        }), 'Config file should be an array of objects only.');
+        assert(Array.isArray(config),
+            'Config file should be an array with list of all copy formats');
+        assert(config.length > 0,
+            'Config file should have at least one entry of copy format');
+        assert(config.every(item => item && item.constructor === Object),
+            'Config file should be an array of objects only.');
 
         this._CONFIG = config;
         return true;
-      } catch(e) {
-        console.warn(e);
+
+      } catch (e) {
+        console.warn('Error reading config file.', e);
         return false;
       }
     });
   }
 
-  _capitalize(string) {
-    return string.replace(/(?:^|(\s|\-))\S/g, (s) => { return s.toUpperCase(); });
+  _sentenceCase(str) {
+    return str.replace(/(?:^|(\s|\-))\S/g, (s) => { return s.toUpperCase(); });
   }
 
   _getHomeDirectory() {
-    return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+    return electron.ipcRenderer.sendSync('get-home-directory');
   }
 } // class MaterialColors
 
