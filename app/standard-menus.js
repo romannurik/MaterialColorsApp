@@ -6,6 +6,8 @@ const HELP_MENU = {
   submenu: []
 };
 
+// needed for Cmd+C, Cmd+V, etc. to work in text fields on mac
+// (https://github.com/electron/electron/issues/1718)
 const EDIT_MENU = {
   label: 'Edit',
   submenu: [
@@ -19,9 +21,7 @@ const EDIT_MENU = {
       accelerator: 'Shift+Command+Z',
       selector: 'redo:'
     },
-    {
-      type: 'separator'
-    },
+    SEPARATOR_MENU_ITEM,
     {
       label: 'Cut',
       accelerator: 'Command+X',
