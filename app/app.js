@@ -421,8 +421,8 @@ class MaterialColors {
 
     if (value.alpha && value.alpha < 1 && largeTile) {
         $('<span>')
-          .addClass(this.CLASS_NAMES.colorTileAlpha)
-            .text(`Alpha ${parseInt(value.alpha * 100)}%`)
+            .addClass(this.CLASS_NAMES.colorTileAlpha)
+            .text(`Alpha ${Math.round(value.alpha * 100)}%`)
             .appendTo($colorTile);
     }
 

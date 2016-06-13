@@ -28,6 +28,9 @@ $colorWhiteTextDisabled: rgba(#fff, .5);
 $colorTooltipBackground: #263238;
 $colorTooltipText: #fff;
 
+$fontStackMono: 'Roboto Mono', monospace;
+$fontStackSansSerif: BlinkMacSystemFont, Roboto, sans-serif;
+
 $thinBorderColor: rgba(#000, .12);
 
 $hueIconWidth: 14px;
@@ -52,7 +55,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  font-family: Roboto, sans-serif;
+  font-family: $fontStackSansSerif;
   font-weight: 400;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -193,7 +196,7 @@ body {
   margin-bottom: 8px;
   outline: none;
   font-size: 10px;
-  font-family: Roboto, sans-serif;
+  font-family: $fontStackSansSerif;
 }
 
 .search-help-text {
@@ -376,7 +379,7 @@ body {
 }
 
 .color-tile-hex {
-  font-family: 'Roboto Mono', monospace;
+  font-family: $fontStackMono;
 }
 
 .update-banner {
