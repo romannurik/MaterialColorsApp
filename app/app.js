@@ -102,7 +102,7 @@ class MaterialColors {
     electron.ipcRenderer.on('update-downloaded', (event, releaseName) => {
       $('<div>')
           .addClass(this.CLASS_NAMES.updateBanner)
-          .text(`Install v${releaseName}`)
+          .text(`Update to v${releaseName}`)
           .click(() => electron.ipcRenderer.send('install-update'))
           .appendTo('body');
     });
