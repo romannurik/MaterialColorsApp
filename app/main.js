@@ -126,75 +126,71 @@ function updateUiMode() {
   }
 
   // Update menu
-  var contextMenuTemplate = [];
+  const {HELP_MENU, EDIT_MENU, WINDOW_MENU, SEPARATOR_MENU_ITEM} = require('./standard-menus.js');
 
-  if (isTrayMode) {
-    contextMenuTemplate.push({
-      label: mainWindow.isVisible() ? 'Hide Colors' : 'Show Colors',
-      click: () => {
-        mainWindow[mainWindow.isVisible() ? 'hide' : 'show']();
-        updateUiMode();
-      }
-    });
-  }
+  const showHideMenuItem = {
+    label: mainWindow.isVisible() ? 'Hide Colors' : 'Show Colors',
+    accelerator: 'Command+H',
+    click: () => {
+      mainWindow[mainWindow.isVisible() ? 'hide' : 'show']();
+      updateUiMode();
+    }
+  };
 
-  if (IS_MAC) {
-    contextMenuTemplate.push({
-      label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
-      click: () => {
-        isTrayMode = !isTrayMode;
-        updateUiMode();
-      }
-    });
-  }
+  const switchModeMacMenuItem = {
+    label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
+    click: () => {
+      isTrayMode = !isTrayMode;
+      updateUiMode();
+    }
+  };
 
-  contextMenuTemplate.push({ type: 'separator' });
+  const aboutMacMenuItem = {
+    label: 'About ' + app.getName(),
+    role: 'about'
+  };
 
-  if (IS_MAC) {
-    contextMenuTemplate.push({
-      label: 'About ' + app.getName(),
-      role: 'about'
-    });
-  }
-
-  const QUIT_MENU_ITEM = {
+  const quitMenuItem = {
     label: 'Quit',
     accelerator: 'Command+Q',
     click: () => app.quit()
   };
 
   if (isTrayMode) {
-    contextMenuTemplate.push(QUIT_MENU_ITEM);
-  }
-
-  var contextMenu = electron.Menu.buildFromTemplate(contextMenuTemplate);
-
-  if (isTrayMode) {
     mainWindow.setAlwaysOnTop(true);
-    trayIcon.setContextMenu(contextMenu);
+    trayIcon.setContextMenu(electron.Menu.buildFromTemplate([]
+        .concat([showHideMenuItem])
+        .concat(IS_MAC ? [switchModeMacMenuItem] : [])
+        .concat([SEPARATOR_MENU_ITEM])
+        .concat(IS_MAC ? [aboutMacMenuItem] : [])
+        .concat([quitMenuItem])));
+
   } else {
     mainWindow.setAlwaysOnTop(false);
+  }
 
-    if (IS_MAC) {
-      app.dock.setMenu(contextMenu);
+  if (IS_MAC) {
+    app.dock.setMenu(electron.Menu.buildFromTemplate([
+      switchModeMacMenuItem,
+      aboutMacMenuItem
+    ]));
 
-      // build the app menu
-      let appMenuTemplate = [
-        {
-          label: 'app', // automatically set to title
-          submenu: contextMenuTemplate.slice().concat([
-            QUIT_MENU_ITEM
-          ])
-        },
-        {
-          label: 'Help',
-          role: 'help',
-          submenu: []
-        }
-      ];
-      electron.Menu.setApplicationMenu(
-          electron.Menu.buildFromTemplate(appMenuTemplate));
-    }
+    // build the app menu
+    electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate([]
+        .concat([
+          {
+            label: 'app', // automatically set to title
+            submenu: [
+              showHideMenuItem,
+              switchModeMacMenuItem,
+              SEPARATOR_MENU_ITEM,
+              aboutMacMenuItem,
+              quitMenuItem
+            ]
+          },
+          EDIT_MENU,
+          WINDOW_MENU,
+          HELP_MENU])));
   }
 
   writePrefs();
@@ -203,9 +199,9 @@ function updateUiMode() {
 
 function readPrefs() {
   try {
-    var prefStr = fs.readFileSync(app.getPath('userData') + '/prefs.json');
+    let prefStr = fs.readFileSync(app.getPath('userData') + '/prefs.json');
     if (prefStr) {
-      var json = JSON.parse(prefStr);
+      let json = JSON.parse(prefStr);
       isTrayMode = !!json.isTrayMode;
     }
   } catch (e) {}
