@@ -144,7 +144,8 @@ class MaterialColors {
 
       let $hue = $('<div>')
           .addClass(`${this.CLASS_NAMES.hue} ${this.CLASS_NAMES.hue}-${hueName}`)
-          .click(() => this._selectHue(hueName))
+          .focus(() => this._selectHue(hueName))
+          .attr('tabindex', '0')
           .appendTo(this.$sidebar);
 
       let $hueIcon = $('<div>')
@@ -378,7 +379,9 @@ class MaterialColors {
         .contextmenu(event => {
           event.preventDefault();
           this._showValueContextMenu(value.hex, value.hueName, value.valueName, value.alpha);
-        });
+          $('.is-selected').focus(); // Return focus to the selected hue
+        })
+        .click(event => $('.is-selected').focus()); // Return focus to the selected hue
 
     let $hex = $('<div>')
         .addClass(this.CLASS_NAMES.colorTileHex)
