@@ -112,6 +112,32 @@ class MaterialColors {
           hideHash: !!event.altKey
         }));
 
+    // arrow up/down keys to navigate sidebar
+    $(window).on('keydown', event => {
+      let $selectedItem = this.$sidebar.find(`.${this.CLASS_NAMES.isSelected}`);
+      let regex = new RegExp('(?:' + `${this.CLASS_NAMES.hue}` + '-)([^\s]+)', 'i');
+      switch (event.which) {
+        case 38: // arrow up
+          let $prev = $selectedItem.prev();
+          if ($prev.length) {
+            if ($prev.hasClass(`${this.CLASS_NAMES.searchButton}`)) {
+              this._selectSearchMode();
+            } else {
+              let hueName = regex.exec($prev.attr('class'))[1];
+              this._selectHue(hueName);
+            }
+          }
+          break;
+        case 40: // arrow down
+          let $next = $selectedItem.next();
+          if ($next.length) {
+            let hueName = regex.exec($next.attr('class'))[1];
+            this._selectHue(hueName);
+          }
+          break;
+      }
+    });
+
     $(window).on('focus', () => this._searchColorFromClipboard());
   }
 
