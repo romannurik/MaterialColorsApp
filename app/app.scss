@@ -120,6 +120,7 @@ body {
   position: relative;
   flex: 1 0 0;
   cursor: pointer;
+  outline: none;
   @include nodrag;
 
   display: flex;
