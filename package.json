@@ -12,24 +12,24 @@
     "start": "gulp"
   },
   "devDependencies": {
-    "del": "^2.2.0",
+    "del": "^3.0.0",
     "electron-osx-sign": "^0.4.0-beta4",
-    "electron-packager": "^7.0.1",
+    "electron-packager": "^12.0.0",
     "electron-prebuilt": "^1.0.1",
     "gulp": "^3.9.1",
-    "gulp-cache": "^0.4.2",
-    "gulp-cli": "^1.2.1",
+    "gulp-cache": "^1.0.2",
+    "gulp-cli": "^2.0.1",
     "gulp-load-plugins": "^1.2.0",
     "gulp-plist": "^0.1.0",
     "gulp-rename": "^1.2.2",
-    "gulp-sass": "^2.2.0",
-    "gulp-shell": "^0.5.2",
+    "gulp-sass": "^3.0.0",
+    "gulp-shell": "^0.6.5",
     "merge-stream": "^1.0.0",
-    "run-sequence": "^1.1.5"
+    "run-sequence": "^2.2.1"
   },
   "dependencies": {
     "jquery": "^3.0.0",
     "tinycolor2": "^1.3.0",
-    "yargs": "^4.2.0"
+    "yargs": "^11.0.0"
   }
 }
