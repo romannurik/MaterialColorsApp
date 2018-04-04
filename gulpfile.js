@@ -29,6 +29,7 @@ const {execSync} = require('child_process');
 
 const colorsFile = argv.colorsFile;
 const packageInfoDeltaFile = argv.packageInfoDeltaFile;
+const iconFile = argv.iconFile;
 
 
 gulp.task('scripts', function () {
@@ -114,7 +115,7 @@ gulp.task('dist', ['build', 'install-packages'], function(cb) {
     'app-bundle-id': packageInfo.appBundleId,
     'app-category-type': 'app-category-type=public.app-category.developer-tools',
     'app-version': packageInfo.version,
-    'icon': 'icon.icns',
+    'icon': iconFile || 'icon.icns',
     'name': packageInfo.appDisplayName,
     'overwrite': true,
   }, (err, appPath) => {
