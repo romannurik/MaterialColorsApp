@@ -25,6 +25,7 @@ const electronPackager = require('electron-packager');
 const electronOsxSign = require('electron-osx-sign');
 const argv = require('yargs').argv;
 const fs = require('fs');
+const {execSync} = require('child_process');
 
 const colorsFile = argv.colorsFile;
 const packageInfoDeltaFile = argv.packageInfoDeltaFile;
@@ -86,7 +87,7 @@ gulp.task('install-packages', ['build'], $.shell.task([
 ], { cwd: 'build' }));
 
 gulp.task('clean', function() {
-  del(['.tmp', 'build', 'dist']);
+  del.sync(['.tmp', 'build', 'dist']);
   $.cache.clearAll();
 });
 
@@ -108,6 +109,8 @@ gulp.task('dist', ['build', 'install-packages'], function(cb) {
     'out': 'dist',
     'asar': true,
     'platform': 'darwin',
+    'prune': false, // seems to be a bug where not just devDependencies but also dependencies is pruned
+                    // we don't need pruning anyway since we do npm install --production
     'app-bundle-id': packageInfo.appBundleId,
     'app-category-type': 'app-category-type=public.app-category.developer-tools',
     'app-version': packageInfo.version,
@@ -129,6 +132,9 @@ gulp.task('dist', ['build', 'install-packages'], function(cb) {
           CFBundleShortVersionString: ''
         }))
         .pipe(gulp.dest(`${appFilePath}/Contents`));
+
+    // https://developer.apple.com/library/content/qa/qa1940/_index.html
+    execSync(`xattr -cr "${appFilePath}"`);
 
     plistStream.on('end', () => {
       // Sign the app
