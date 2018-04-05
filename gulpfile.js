@@ -118,11 +118,14 @@ gulp.task('dist', ['build', 'install-packages'], function(cb) {
     'icon': iconFile || 'icon.icns',
     'name': packageInfo.appDisplayName,
     'overwrite': true,
-  }, (err, appPath) => {
+  }, (err, appPaths) => {
+    let appPath = appPaths[0];
+    if (!appPath) {
+      throw new Error('No app bundle was outputted by electron-packager');
+    }
+
     if (err) {
-      console.error(err);
-      cb();
-      return;
+      throw new Error(`Error with electron-packager: ${err}`);
     }
 
     // Modify plist to hide from Dock by default
@@ -145,9 +148,7 @@ gulp.task('dist', ['build', 'install-packages'], function(cb) {
         platform: 'darwin'
       }, (err) => {
         if (err) {
-          console.error(err);
-          cb();
-          return;
+          throw new Error(`Error signing the app bundle: ${err}`);
         }
 
         cb();
