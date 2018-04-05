@@ -12,6 +12,7 @@
     "start": "gulp"
   },
   "devDependencies": {
+    "archiver": "^2.1.1",
     "del": "^3.0.0",
     "electron-osx-sign": "^0.4.0-beta4",
     "electron-packager": "^12.0.0",
