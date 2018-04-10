@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Google Inc.
+ * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,133 +16,264 @@
 
 'use strict';
 
+const EventEmitter = require('events');
 const electron = require('electron');
+const electronPositioner = require('electron-positioner');
 const argv = require('yargs').argv;
 const fs = require('fs');
+const {app, autoUpdater, Menu, MenuItem} = electron;
 
-const app = electron.app;
-const autoUpdater = electron.autoUpdater;
-
-const UPDATE_FEED_URL = 'http://roman-update-service.appspot.com/s/check_updates';
-
+const {UPDATE_FEED_URL} = require('./config');
 const DEV_MODE = argv.dev;
-
 const IS_MAC = process.platform == 'darwin';
 
 
-let isTrayMode = true;
+const UI_MODES = {
+  TRAY: 'tray',
+  TRAY_ATTACHED: 'tray-attached',
+  NORMAL: 'normal'
+};
+
+let uiMode = null;
 let mainWindow;
+let mainWindowPositioner;
 let trayIcon;
+let trayMenu;
+let openAtLogin;
+
+const eventBus = new EventEmitter();
 
 
-let shouldQuit = app.makeSingleInstance(() => {
+let alreadyRunning = app.makeSingleInstance(() => {
   mainWindow.show();
   mainWindow.focus();
+  eventBus.emit('show-hide');
 });
 
-
-if (shouldQuit) {
+if (alreadyRunning) {
   app.quit();
   return;
 }
 
 
 app.on('ready', () => {
-  mainWindow = new electron.BrowserWindow({
-    backgroundColor: '#fff',
-    width: 200,
-    height: 12 * 2 /* padding */
-          + 12 + 8 /* heading */
-          + (32 + 2) * 14 /* 14 values */,
-    resizable: false,
-    skipTaskbar: true,
-    maximizable: false,
-    fullscreenable: false,
-    frame: false
-  });
+  // this setting doesn't seem to change instantly, so don't rely on it
+  // for showing the checkbox state in the menu
+  openAtLogin = !!app.getLoginItemSettings().openAtLogin;
 
-  mainWindow.loadURL(`file://${__dirname}/index.html`);
-  mainWindow.showInactive();
-  updateUiMode();
-
-  if (DEV_MODE) {
-    mainWindow.webContents.openDevTools({ detach: true });
-  }
-
-  mainWindow.on('show', () => updateUiMode());
-  mainWindow.on('hide', () => updateUiMode());
-  mainWindow.on('closed', () => mainWindow = null);
-
+  readPrefs();
+  setupUiMode(uiMode, {firstRun: true});
   if (!DEV_MODE) {
     checkForAppUpdates();
   }
 });
 
 
-app.on('window-all-closed', () => app.quit());
+app.on('window-all-closed', () => {
+  app.quit();
+});
 
 
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
-    createWindow();
+  if (!mainWindow) {
+    setupUiMode(uiMode);
   }
-  if (!mainWindow.isVisible()) {
+  if (mainWindow && !mainWindow.isVisible()) {
     mainWindow.show();
     mainWindow.focus();
   }
 });
 
 
-electron.ipcMain.on('update-ui-mode', updateUiMode);
+electron.ipcMain.on('on-hide', () => eventBus.emit('show-hide'));
+
+electron.ipcMain.on('show-overflow-menu', () => {
+  trayMenu.popup();
+});
 
 
 electron.ipcMain.on('get-home-directory', event => event.returnValue = app.getPath('home'));
 
 
-function updateUiMode() {
-  // Build or teardown tray
-  if (isTrayMode) {
-    if (!trayIcon) {
-      trayIcon = new electron.Tray(__dirname + '/assets/TrayIconTemplate.png');
-      trayIcon.setToolTip(app.getName());
-      trayIcon.on('right-click', () => {
-        mainWindow[mainWindow.isVisible() ? 'hide' : 'show']();
-      });
+eventBus.on('show-hide', () => {
+  setupMenus();
+
+  if (trayIcon && uiMode == UI_MODES.TRAY_ATTACHED) {
+    trayIcon.setHighlightMode(isVisible() ? 'always' : 'never');
+  }
+});
+
+
+function setupUiMode(newUiMode, {fromUser, firstRun} = {}) {
+  // if (!firstRun && newUiMode == uiMode) {
+  //   return;
+  // }
+
+  uiMode = newUiMode;
+
+  setupMainWindow();
+  setupTray();
+  setupDock();
+  setupMenus();
+
+  if (fromUser) {
+    writePrefs();
+  }
+}
+
+
+function setupMainWindow() {
+  if (!mainWindow) {
+    mainWindow = new electron.BrowserWindow({
+      backgroundColor: '#fff',
+      width: 200,
+      height: 12 * 2 /* padding */
+            + 12 + 8 /* heading */
+            + (32 + 2) * 14 /* 14 values */,
+      resizable: false,
+      skipTaskbar: true,
+      maximizable: false,
+      fullscreenable: false,
+      frame: false
+    });
+
+    mainWindow.show();
+
+    mainWindow.on('show', () => eventBus.emit('show-hide'));
+    mainWindow.on('hide', () => eventBus.emit('show-hide'));
+    mainWindow.on('blur', () => {
+      if (uiMode == UI_MODES.TRAY_ATTACHED) {
+        toggleVisibility(false)
+      }
+    });
+    mainWindow.on('closed', () => app.quit());
+
+    mainWindowPositioner = new electronPositioner(mainWindow);
+
+    if (DEV_MODE) {
+      mainWindow.webContents.openDevTools({ detach: true });
+      // triggers blur, which hides the window in tray-attached mode
     }
-  } else if (trayIcon) {
+  }
+
+  mainWindow.setAlwaysOnTop(uiMode == UI_MODES.TRAY || uiMode == UI_MODES.TRAY_ATTACHED);
+  mainWindow.loadURL(`file://${__dirname}/index.html?uiMode=${uiMode}`);
+  mainWindow.setMovable(uiMode != UI_MODES.TRAY_ATTACHED);
+}
+
+
+function setupTray() {
+  // first tear it down
+  if (trayIcon) {
     trayIcon.destroy();
     trayIcon = null;
   }
 
-  // Build or teardown dock
-  if (IS_MAC && app.dock) {
-    if (!isTrayMode) {
-      app.dock.show();
-    } else {
-      app.dock.hide();
-    }
+  if (uiMode != UI_MODES.TRAY && uiMode != UI_MODES.TRAY_ATTACHED) {
+    return;
   }
 
-  // Update menu
+  trayIcon = new electron.Tray(__dirname + '/assets/TrayIconTemplate.png');
+  trayIcon.setToolTip(app.getName());
+  if (uiMode == UI_MODES.TRAY_ATTACHED) {
+    trayIcon.on('click', (evt, trayBounds) => {
+      toggleVisibility();
+      mainWindowPositioner.move('trayCenter', trayBounds);
+    });
+    trayIcon.on('right-click', () => {
+      trayIcon.popUpContextMenu(trayMenu);
+    });
+
+    // position main window to bounds
+    let trayBounds = trayIcon.getBounds();
+    mainWindowPositioner.move('trayCenter', trayBounds);
+  } else if (uiMode == UI_MODES.TRAY) {
+    // click to be set later as part of menu setup
+    trayIcon.on('right-click', () => {
+      toggleVisibility();
+    });
+  }
+}
+
+
+function setupDock() {
+  if (!IS_MAC || !app.dock) {
+    return;
+  }
+
+  if (uiMode == UI_MODES.NORMAL) {
+    app.dock.show();
+  } else {
+    app.dock.hide();
+  }
+}
+
+
+function setupMenus() {
+  if (!mainWindow) {
+    return;
+  }
+
   const {HELP_MENU, EDIT_MENU, WINDOW_MENU, SEPARATOR_MENU_ITEM} = require('./standard-menus.js');
 
   const showHideMenuItem = {
-    label: mainWindow.isVisible() ? 'Hide Colors' : 'Show Colors',
+    label: isVisible() ? 'Hide Colors' : 'Show Colors',
     accelerator: 'Command+H',
     click: () => {
-      mainWindow[mainWindow.isVisible() ? 'hide' : 'show']();
-      updateUiMode();
+      toggleVisibility();
     }
   };
 
   const switchModeMacMenuItem = {
-    label: isTrayMode ? 'Switch to Normal App Mode' : 'Switch to Menu Bar Mode',
+    label: 'App Mode',
+    submenu: [
+      {
+        label: 'Normal',
+        type: 'checkbox',
+        checked: uiMode == UI_MODES.NORMAL,
+        click: () => setupUiMode(UI_MODES.NORMAL, {fromUser: true}),
+      },
+      {
+        label: 'Menu Bar',
+        type: 'checkbox',
+        checked: uiMode == UI_MODES.TRAY,
+        click: () => setupUiMode(UI_MODES.TRAY, {fromUser: true}),
+      },
+      {
+        label: 'Menu Bar (Attached)',
+        type: 'checkbox',
+        checked: uiMode == UI_MODES.TRAY_ATTACHED,
+        click: () => setupUiMode(UI_MODES.TRAY_ATTACHED, {fromUser: true}),
+      },
+    ]
+  };
+
+  const openAtLoginMenuItem = {
+    label: 'Open at Login',
+    type: 'checkbox',
+    checked: openAtLogin,
     click: () => {
-      isTrayMode = !isTrayMode;
-      updateUiMode();
-    }
+      openAtLogin = !openAtLogin;
+
+      // TODO: wait for https://github.com/electron/electron/issues/10880
+      // to resolve before turning this on
+      if (IS_MAC && !openAtLogin) {
+        // turn off
+        require('child_process').exec(
+            `osascript -e 'tell application "System Events" to ` +
+            `delete login item "${app.getName()}"'`);
+      }
+
+      // TODO: if the user chooses Options > Open at Login in the dock
+      // we don't have a chance to update the custom app menus :-/
+      app.setLoginItemSettings({
+        openAtLogin,
+        openAsHidden: true
+      });
+      setupMenus();
+    },
   };
 
   const aboutMacMenuItem = {
@@ -153,47 +284,45 @@ function updateUiMode() {
   const quitMenuItem = {
     label: 'Quit',
     accelerator: 'Command+Q',
-    click: () => app.quit()
+    click: () => app.quit(),
   };
-
-  if (isTrayMode) {
-    mainWindow.setAlwaysOnTop(true);
-    trayIcon.setContextMenu(electron.Menu.buildFromTemplate([]
-        .concat([showHideMenuItem])
-        .concat(IS_MAC ? [switchModeMacMenuItem] : [])
-        .concat([SEPARATOR_MENU_ITEM])
-        .concat(IS_MAC ? [aboutMacMenuItem] : [])
-        .concat([quitMenuItem])));
-
-  } else {
-    mainWindow.setAlwaysOnTop(false);
+  
+  if (uiMode == UI_MODES.TRAY || uiMode == UI_MODES.TRAY_ATTACHED) {
+    trayMenu = Menu.buildFromTemplate([
+        showHideMenuItem,
+        ...(IS_MAC ? [switchModeMacMenuItem] : []),
+        SEPARATOR_MENU_ITEM,
+        openAtLoginMenuItem,
+        ...(IS_MAC ? [aboutMacMenuItem] : []),
+        quitMenuItem]);
+    if (uiMode == UI_MODES.TRAY) {
+      trayIcon.setContextMenu(trayMenu);
+    }
   }
 
   if (IS_MAC) {
-    app.dock.setMenu(electron.Menu.buildFromTemplate([
+    app.dock.setMenu(Menu.buildFromTemplate([
       switchModeMacMenuItem,
       aboutMacMenuItem
     ]));
 
     // build the app menu
-    electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate([]
-        .concat([
-          {
-            label: 'app', // automatically set to title
-            submenu: [
-              showHideMenuItem,
-              switchModeMacMenuItem,
-              SEPARATOR_MENU_ITEM,
-              aboutMacMenuItem,
-              quitMenuItem
-            ]
-          },
-          EDIT_MENU,
-          WINDOW_MENU,
-          HELP_MENU])));
+    Menu.setApplicationMenu(Menu.buildFromTemplate([
+        {
+          label: 'app', // automatically set to title
+          submenu: [
+            showHideMenuItem,
+            switchModeMacMenuItem,
+            SEPARATOR_MENU_ITEM,
+            openAtLoginMenuItem,
+            aboutMacMenuItem,
+            quitMenuItem
+          ]
+        },
+        EDIT_MENU,
+        WINDOW_MENU,
+        HELP_MENU]));
   }
-
-  writePrefs();
 }
 
 
@@ -201,8 +330,11 @@ function readPrefs() {
   try {
     let prefStr = fs.readFileSync(app.getPath('userData') + '/prefs.json');
     if (prefStr) {
-      let json = JSON.parse(prefStr);
-      isTrayMode = !!json.isTrayMode;
+      let prefs = JSON.parse(prefStr);
+      uiMode = prefs.uiMode;
+      if (!uiMode && 'isTrayMode' in prefs) {
+        uiMode = prefs.isTrayMode ? UI_MODES.TRAY : UI_MODES.NORMAL;
+      }
     }
   } catch (e) {}
 }
@@ -210,7 +342,7 @@ function readPrefs() {
 
 function writePrefs() {
   fs.writeFileSync(app.getPath('userData') + '/prefs.json', JSON.stringify({
-    isTrayMode: isTrayMode
+    uiMode
   }));
 }
 
@@ -240,4 +372,24 @@ function checkForAppUpdates() {
 }
 
 
-readPrefs();
+function isVisible() {
+  return mainWindow && mainWindow.isVisible();
+}
+
+
+function toggleVisibility(makeVisible) {
+  if (makeVisible === undefined) {
+    makeVisible = !isVisible();
+  }
+
+  if (!makeVisible && mainWindow) {
+    mainWindow.hide();
+  }
+  if (makeVisible) {
+    if (!mainWindow) {
+      // TODO: do we need to handle this?
+    }
+
+    mainWindow.show();
+  }
+}

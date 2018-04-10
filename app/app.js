@@ -67,6 +67,7 @@ class MaterialColors {
       isSelected: 'is-selected',
       isWhite: 'is-white',
       isLarge: 'is-large',
+      menuButton: 'menu-button',
       searchButton: 'search-button',
       searchHelpText: 'search-help-text',
       searchIcon: 'search-icon',
@@ -94,10 +95,18 @@ class MaterialColors {
 
     this._buildUi();
 
-    $(`.${this.CLASS_NAMES.closeButton}`).click(() => {
-      electron.remote.getCurrentWindow().hide();
-      electron.ipcRenderer.send('update-ui-mode');
-    });
+    $(`.${this.CLASS_NAMES.closeButton}`)
+        .toggle(!document.location.search.includes('uiMode=tray-attached'))
+        .click(() => {
+          electron.remote.getCurrentWindow().hide();
+          electron.ipcRenderer.send('on-hide');
+        });
+
+    $(`.${this.CLASS_NAMES.menuButton}`)
+        .toggle(document.location.search.includes('uiMode=tray-attached'))
+        .click(() => {
+          electron.ipcRenderer.send('show-overflow-menu');
+        });
 
     electron.ipcRenderer.on('update-downloaded', (event, releaseName) => {
       $('<div>')

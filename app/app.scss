@@ -75,7 +75,8 @@ body {
   background-color: $colorBackground;
 }
 
-.close-button {
+.close-button,
+.menu-button {
   position: absolute;
   right: 12px;
   top: 8px;
