@@ -21,12 +21,10 @@ const $ = require('jquery');
 const electron = require('electron');
 const remote = electron.remote;
 const Menu = remote.Menu;
-const MenuItem = remote.MenuItem;
 
 const tinycolor = require('tinycolor2');
 const fs = require('fs');
 const path = require('path');
-const assert = require('assert');
 
 const CONFIG_FILENAME = '.materialcolorsapp.json';
 const DEFAULT_VALUE_COPY_FORMAT = {
@@ -44,6 +42,13 @@ class MaterialColors {
     this._loadConfig();
 
     this.COLORS = require('./colors.js');
+    if (this._config.extraColors) {
+      this.COLORS[Object.keys(this.COLORS)[0]].startGroup = true;
+      this.COLORS = {
+        ...this._config.extraColors,
+        ...this.COLORS,
+      };
+    };
 
     this._allMaterialValues = [];
     Object.keys(this.COLORS).map(hueName =>
@@ -63,6 +68,7 @@ class MaterialColors {
       hueIcon: 'hue-icon',
       hueIconSelector: 'hue-icon-selector',
       hueLabel: 'hue-label',
+      isDarkMode: 'is-dark-mode',
       isHidden: 'is-hidden',
       isSelected: 'is-selected',
       isWhite: 'is-white',
@@ -75,6 +81,7 @@ class MaterialColors {
       searchLabel: 'search-label',
       searchResults: 'search-results',
       searchSection: 'search-section',
+      separator: 'separator',
       sidebar: 'sidebar',
       updateBanner: 'update-banner',
       valueHeading: 'value-heading',
@@ -88,6 +95,9 @@ class MaterialColors {
   }
 
   _init() {
+    this.isDarkMode = !!document.location.search.includes('darkMode=true');
+    $('body').toggleClass(this.CLASS_NAMES.isDarkMode, this.isDarkMode);
+
     this.$sidebar = $(`.${this.CLASS_NAMES.sidebar}`);
     this.$contentArea = $(`.${this.CLASS_NAMES.contentArea}`);
     this.$searchSection = $(`.${this.CLASS_NAMES.searchSection}`);
@@ -114,6 +124,11 @@ class MaterialColors {
           .text(`Update to v${releaseName}`)
           .click(() => electron.ipcRenderer.send('install-update'))
           .appendTo('body');
+    });
+
+    electron.ipcRenderer.on('dark-mode-updated', (event, isDarkMode) => {
+      this.isDarkMode = isDarkMode;
+      $('body').toggleClass(this.CLASS_NAMES.isDarkMode, isDarkMode);
     });
 
     $(window).on('keydown keyup', event =>
@@ -151,19 +166,27 @@ class MaterialColors {
         firstHueName = hueName;
       }
 
+      if (color.startGroup) {
+        $('<div>')
+            .addClass(`${this.CLASS_NAMES.separator}`)
+            .appendTo(this.$sidebar);
+      }
+
       let $hue = $('<div>')
           .addClass(`${this.CLASS_NAMES.hue} ${this.CLASS_NAMES.hue}-${hueName}`)
           .click(() => this._selectHue(hueName))
           .appendTo(this.$sidebar);
 
+      let keyColor = color[this.isDarkMode ? '300' : '500'].hex;
+
       let $hueIcon = $('<div>')
           .addClass(this.CLASS_NAMES.hueIcon)
-          .css('background-color', color['500'].hex)
+          .css('background-color', keyColor)
           .appendTo($hue);
 
       $('<div>')
           .addClass(this.CLASS_NAMES.hueIconSelector)
-          .css('background-color', color['700'].hex)
+          .css('background-color', keyColor)
           .appendTo($hueIcon);
 
       $('<div>')
@@ -557,20 +580,18 @@ class MaterialColors {
     const configFilePath = path.join(this._getHomeDirectory(), CONFIG_FILENAME);
 
     this._config = {};
-    fs.readFile(configFilePath, (err, data) => {
+    try {
+      let data = fs.readFileSync(configFilePath);
       if (!data) {
         return;
       }
 
-      try {
-        this._config = JSON.parse(data);
-        return true;
+      this._config = JSON.parse(data);
 
-      } catch (e) {
-        console.warn('Error reading config file.', e);
-        return false;
-      }
-    });
+    } catch (e) {
+      console.warn('Error reading config file.', e);
+      return false;
+    }
   }
 
   _sentenceCase(str) {

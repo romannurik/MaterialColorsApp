@@ -1,0 +1,39 @@
+/*
+ * Copyright 2019 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@mixin theme-light {
+  --theme-color-bg: #fff;
+  --theme-color-on-primary: #{rgba(#000, .87)};
+  --theme-color-on-secondary: #{rgba(#000, .54)};
+  --theme-color-on-tertiary: #{rgba(#000, .38)};
+  --theme-color-on-disabled: #{rgba(#000, .26)};
+  --theme-color-thin-border: #{rgba(#000, .12)};
+
+  --theme-color-tooltip-bg: #263238;
+  --theme-color-tooltip-text: #fff;
+}
+
+@mixin theme-dark {
+  --theme-color-bg: #3c3c3c;
+  --theme-color-on-primary: #fff;
+  --theme-color-on-secondary: #{rgba(#fff, .7)};
+  --theme-color-on-tertiary: #{rgba(#fff, .5)};
+  --theme-color-on-disabled: #{rgba(#fff, .3)};
+  --theme-color-thin-border: #{rgba(#fff, .2)};
+
+  --theme-color-tooltip-bg: #fff;
+  --theme-color-tooltip-text: #333;
+}

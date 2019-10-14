@@ -33,7 +33,7 @@ const packageInfoDeltaFile = argv.packageInfoDeltaFile;
 const iconFile = argv.iconFile;
 
 
-gulp.task('scripts', function () {
+gulp.task('scripts', () => {
   if (colorsFile) {
     return merge(
       gulp.src([
@@ -51,12 +51,12 @@ gulp.task('scripts', function () {
   }
 });
 
-gulp.task('copy', function () {
-  var packageInfo = require('./package.json');
+gulp.task('copy', () => {
+  let packageInfo = require('./package.json');
 
   if (packageInfoDeltaFile) {
-    var packageInfoDelta = JSON.parse(fs.readFileSync(packageInfoDeltaFile));
-    for (var k in packageInfoDelta) {
+    let packageInfoDelta = JSON.parse(fs.readFileSync(packageInfoDeltaFile));
+    for (let k in packageInfoDelta) {
       let m;
       if (m = k.match(/(.+)\.suffix$/)) {
         packageInfo[m[1]] += packageInfoDelta[k];
@@ -74,7 +74,7 @@ gulp.task('copy', function () {
   ]);
 });
 
-gulp.task('styles', function () {
+gulp.task('styles', () => {
   return gulp.src('app/app.scss')
     .pipe($.sass({
       style: 'expanded',
@@ -84,26 +84,23 @@ gulp.task('styles', function () {
     .pipe(gulp.dest('build'));
 });
 
-gulp.task('install-packages', ['build'], $.shell.task([
-  'npm install --production'
-], { cwd: 'build' }));
-
-gulp.task('clean', function() {
+gulp.task('clean', cb => {
   del.sync(['.tmp', 'build', 'dist']);
   $.cache.clearAll();
+  cb();
 });
 
-gulp.task('build', function(cb) {
-  runSequence(
-      'clean', 'styles', 'scripts', 'copy',
-      cb);
-});
+gulp.task('build', gulp.series('clean', 'styles', 'scripts', 'copy'));
 
-gulp.task('run-electron', ['build'], $.shell.task([
+gulp.task('install-packages', gulp.series('build', $.shell.task([
+  'npm install --production'
+], { cwd: 'build' })));
+
+gulp.task('run-electron', gulp.series('build', $.shell.task([
   'electron ./build/ --dev'
-]));
+])));
 
-gulp.task('dist', ['build', 'install-packages'], function(cb) {
+gulp.task('dist', gulp.series('build', 'install-packages', cb => {
   let packageInfo = require('./build/package.json');
   electronPackager({
     arch: 'x64',
@@ -164,6 +161,6 @@ gulp.task('dist', ['build', 'install-packages'], function(cb) {
       });
     });
   });
-});
+}));
 
-gulp.task('default', ['run-electron']);
+gulp.task('default', gulp.series('run-electron'));

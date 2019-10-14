@@ -1,0 +1,40 @@
+/*
+ * Copyright 2019 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import 'themes';
+
+$colorBackground: var(--theme-color-bg);
+$colorOnPrimary: var(--theme-color-on-primary);
+$colorOnSecondary: var(--theme-color-on-secondary);
+$colorOnTertiary: var(--theme-color-on-tertiary);
+$colorOnDisabled: var(--theme-color-on-disabled);
+$colorThinBorder: var(--theme-color-thin-border);
+
+$colorTooltipBackground: var(--theme-color-tooltip-bg);
+$colorTooltipText: var(--theme-color-tooltip-text);
+
+$fontStackMono: 'Roboto Mono', monospace;
+$fontStackSansSerif: BlinkMacSystemFont, Roboto, sans-serif;
+
+$hueIconWidth: 14px;
+$sidebarWidth: 12px * 2 + $hueIconWidth;
+
+$animTimeMedium: .3s;
+$animTimeFast: $animTimeMedium / 2;
+$animTimeVeryFast: $animTimeMedium / 3;
+$animTimeSlow: $animTimeMedium * 1.5;
+
+$tilePadding: 8px;

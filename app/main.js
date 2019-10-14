@@ -21,11 +21,13 @@ const electron = require('electron');
 const electronPositioner = require('electron-positioner');
 const argv = require('yargs').argv;
 const fs = require('fs');
-const {app, autoUpdater, Menu, MenuItem} = electron;
+const {app, autoUpdater, systemPreferences, Menu} = electron;
 
 const {UPDATE_FEED_URL} = require('./config');
 const DEV_MODE = argv.dev;
 const IS_MAC = process.platform == 'darwin';
+
+const COLORS = require('./colors.js');
 
 
 const UI_MODES = {
@@ -43,16 +45,14 @@ let openAtLogin;
 
 const eventBus = new EventEmitter();
 
-
-let alreadyRunning = app.makeSingleInstance(() => {
-  mainWindow.show();
-  mainWindow.focus();
-  eventBus.emit('show-hide');
-});
-
-if (alreadyRunning) {
+if (!app.requestSingleInstanceLock()) {
   app.quit();
-  return;
+} else {
+  app.on('second-instance', () => {
+    mainWindow.show();
+    mainWindow.focus();
+    eventBus.emit('show-hide');
+  });
 }
 
 
@@ -86,6 +86,9 @@ app.on('activate', () => {
   }
 });
 
+systemPreferences.subscribeNotification(
+    'AppleInterfaceThemeChangedNotification',
+    () => updateMainWindowDarkMode());
 
 electron.ipcMain.on('on-hide', () => eventBus.emit('show-hide'));
 
@@ -106,14 +109,21 @@ eventBus.on('show-hide', () => {
 });
 
 
-function setupUiMode(newUiMode, {fromUser, firstRun} = {}) {
-  // if (!firstRun && newUiMode == uiMode) {
-  //   return;
-  // }
+function updateMainWindowDarkMode() {
+  if (!mainWindow) {
+    return;
+  }
 
+  let darkMode = systemPreferences.isDarkMode();
+  mainWindow.webContents.send('dark-mode-updated', darkMode);
+  mainWindow.setBackgroundColor(darkMode ? '#3c3c3c' : '#fff');
+}
+
+
+function setupUiMode(newUiMode, {fromUser, firstRun} = {}) {
   uiMode = newUiMode;
 
-  setupMainWindow();
+  setupMainWindow({firstRun});
   setupTray();
   setupDock();
   setupMenus();
@@ -124,22 +134,59 @@ function setupUiMode(newUiMode, {fromUser, firstRun} = {}) {
 }
 
 
-function setupMainWindow() {
+function computeMainWindowHeight() {
+  const SIDEBAR_VERT_PADDING = 8;
+  const SIDEBAR_HUE_MIN_HEIGHT = 22;
+  const SIDEBAR_SEARCH_MIN_HEIGHT = 22;
+  const SIDEBAR_SEPARATOR_HEIGHT = 17;
+
+  let numColors = Object.keys(COLORS).length;
+  let numSeparators = Object.values(COLORS).filter(({startGroup}) => !!startGroup).length;
+
+  let sidebarMinHeight = SIDEBAR_VERT_PADDING * 2 +
+      + SIDEBAR_SEARCH_MIN_HEIGHT
+      + SIDEBAR_HUE_MIN_HEIGHT * numColors
+      + SIDEBAR_SEPARATOR_HEIGHT * numSeparators;
+
+  const MAIN_VERT_PADDING = 12;
+  const HEADING_HEIGHT = 12 + 8; // with padding
+  const VALUE_HEIGHT = 32 + 2; // with padding
+  const NUM_VALUES = 14; // usually 14 total values
+
+  let mainMinHeight = MAIN_VERT_PADDING * 2
+      + HEADING_HEIGHT
+      + VALUE_HEIGHT * NUM_VALUES;
+
+  return Math.max(mainMinHeight, sidebarMinHeight);
+}
+
+
+function setupMainWindow({firstRun}) {
   if (!mainWindow) {
     mainWindow = new electron.BrowserWindow({
-      backgroundColor: '#fff',
+      transparent: true,
       width: 200,
-      height: 12 * 2 /* padding */
-            + 12 + 8 /* heading */
-            + (32 + 2) * 14 /* 14 values */,
+      height: computeMainWindowHeight(),
       resizable: false,
       skipTaskbar: true,
       maximizable: false,
       fullscreenable: false,
-      frame: false
+      frame: false,
+      webPreferences: {
+        nodeIntegration: true,
+      }
     });
 
-    mainWindow.show();
+    updateMainWindowDarkMode();
+
+    if (uiMode == UI_MODES.NORMAL) {
+      mainWindow.show();
+    } else {
+      // when starting in tray mode, don't show it
+      if (firstRun) {
+        mainWindow.hide();
+      }
+    }
 
     mainWindow.on('show', () => eventBus.emit('show-hide'));
     mainWindow.on('hide', () => eventBus.emit('show-hide'));
@@ -153,13 +200,14 @@ function setupMainWindow() {
     mainWindowPositioner = new electronPositioner(mainWindow);
 
     if (DEV_MODE) {
-      mainWindow.webContents.openDevTools({ detach: true });
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
       // triggers blur, which hides the window in tray-attached mode
     }
   }
 
+  let darkMode = systemPreferences.isDarkMode();
   mainWindow.setAlwaysOnTop(uiMode == UI_MODES.TRAY || uiMode == UI_MODES.TRAY_ATTACHED);
-  mainWindow.loadURL(`file://${__dirname}/index.html?uiMode=${uiMode}`);
+  mainWindow.loadURL(`file://${__dirname}/index.html?uiMode=${uiMode}&darkMode=${darkMode}`);
   mainWindow.setMovable(uiMode != UI_MODES.TRAY_ATTACHED);
 }
 
@@ -257,15 +305,6 @@ function setupMenus() {
     click: () => {
       openAtLogin = !openAtLogin;
 
-      // TODO: wait for https://github.com/electron/electron/issues/10880
-      // to resolve before turning this on
-      if (IS_MAC && !openAtLogin) {
-        // turn off
-        require('child_process').exec(
-            `osascript -e 'tell application "System Events" to ` +
-            `delete login item "${app.getName()}"'`);
-      }
-
       // TODO: if the user chooses Options > Open at Login in the dock
       // we don't have a chance to update the custom app menus :-/
       app.setLoginItemSettings({
@@ -327,6 +366,7 @@ function setupMenus() {
 
 
 function readPrefs() {
+  uiMode = UI_MODES.NORMAL;
   try {
     let prefStr = fs.readFileSync(app.getPath('userData') + '/prefs.json');
     if (prefStr) {
