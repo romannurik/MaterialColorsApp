@@ -22,7 +22,7 @@ const del = require('del');
 const merge = require('merge-stream');
 const runSequence = require('run-sequence');
 const electronPackager = require('electron-packager');
-const electronOsxSign = require('electron-osx-sign');
+const electronOsxSignAsync = require('electron-osx-sign').signAsync;
 const argv = require('yargs').argv;
 const fs = require('fs');
 const archiver = require('archiver');
@@ -100,9 +100,9 @@ gulp.task('run-electron', gulp.series('build', $.shell.task([
   'electron ./build/ --dev'
 ])));
 
-gulp.task('dist', gulp.series('build', 'install-packages', cb => {
+gulp.task('dist', gulp.series('build', 'install-packages', async cb => {
   let packageInfo = require('./build/package.json');
-  electronPackager({
+  let appPaths = await electronPackager({
     arch: 'x64',
     dir: 'build',
     out: 'dist',
@@ -116,50 +116,42 @@ gulp.task('dist', gulp.series('build', 'install-packages', cb => {
     icon: iconFile || 'icon.icns',
     name: packageInfo.appDisplayName,
     overwrite: true,
-  }, (err, appPaths) => {
-    let appPath = appPaths[0];
-    if (!appPath) {
-      throw new Error('No app bundle was outputted by electron-packager');
-    }
+  });
 
-    if (err) {
-      throw new Error(`Error with electron-packager: ${err}`);
-    }
+  let appPath = appPaths[0];
+  if (!appPath) {
+    throw new Error('No app bundle was outputted by electron-packager');
+  }
 
-    // Modify plist to hide from Dock by default
-    let appFilePath = `${appPath}/${packageInfo.appDisplayName}.app`;
-    let plistStream = gulp.src(`${appFilePath}/Contents/Info.plist`)
-        .pipe($.plist({
-          NSUIElement: 1,
-          CFBundleShortVersionString: ''
-        }))
-        .pipe(gulp.dest(`${appFilePath}/Contents`));
+  // Modify plist to hide from Dock by default
+  let appFilePath = `${appPath}/${packageInfo.appDisplayName}.app`;
+  let plistStream = gulp.src(`${appFilePath}/Contents/Info.plist`)
+      .pipe($.plist({
+        NSUIElement: 1,
+        CFBundleShortVersionString: ''
+      }))
+      .pipe(gulp.dest(`${appFilePath}/Contents`));
 
-    // https://developer.apple.com/library/content/qa/qa1940/_index.html
-    execSync(`xattr -cr "${appFilePath}"`);
+  // https://developer.apple.com/library/content/qa/qa1940/_index.html
+  execSync(`xattr -cr "${appFilePath}"`);
 
-    plistStream.on('end', () => {
-      // Sign the app
-      electronOsxSign({
-        app: appFilePath,
-        identity: 'Developer ID Application: Roman NURIK (NLACF347G7)',
-        platform: 'darwin'
-      }, (err) => {
-        if (err) {
-          throw new Error(`Error signing the app bundle: ${err}`);
-        }
-
-        // zip up the directory
-        console.log('Zipping up the package');
-        let zipStream = fs.createWriteStream(`./dist/${packageInfo.version}.zip`)
-            .on('error', err => { throw err })
-            .on('end', () => cb());
-        let archive = archiver('zip', {zlib: {level: 9}})
-        archive.pipe(zipStream);
-        archive.directory(appFilePath, `${packageInfo.appDisplayName}.app`);
-        archive.finalize();
-      });
+  plistStream.on('end', async () => {
+    // Sign the app
+    await electronOsxSignAsync({
+      app: appFilePath,
+      identity: 'Developer ID Application: Roman NURIK (NLACF347G7)',
+      platform: 'darwin'
     });
+
+    // zip up the directory
+    console.log('Zipping up the package');
+    let zipStream = fs.createWriteStream(`./dist/${packageInfo.version}.zip`)
+        .on('error', err => { throw err })
+        .on('end', () => cb());
+    let archive = archiver('zip', {zlib: {level: 9}})
+    archive.pipe(zipStream);
+    archive.directory(appFilePath, `${packageInfo.appDisplayName}.app`);
+    archive.finalize();
   });
 }));
 
