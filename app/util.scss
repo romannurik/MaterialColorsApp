@@ -20,3 +20,10 @@
     -webkit-app-region: no-drag;
   }
 }
+
+@mixin draggable {
+  &,
+  & * {
+    -webkit-app-region: drag;
+  }
+}

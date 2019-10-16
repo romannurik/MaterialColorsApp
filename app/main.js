@@ -141,7 +141,7 @@ function computeMainWindowHeight() {
   const SIDEBAR_SEPARATOR_HEIGHT = 17;
 
   let numColors = Object.keys(COLORS).length;
-  let numSeparators = Object.values(COLORS).filter(({startGroup}) => !!startGroup).length;
+  let numSeparators = Object.values(COLORS).filter(({_startGroup}) => !!_startGroup).length;
 
   let sidebarMinHeight = SIDEBAR_VERT_PADDING * 2 +
       + SIDEBAR_SEARCH_MIN_HEIGHT
