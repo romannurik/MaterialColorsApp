@@ -64,7 +64,11 @@ app.on('ready', () => {
   readPrefs();
   setupUiMode(uiMode, {firstRun: true});
   if (!DEV_MODE) {
-    checkForAppUpdates();
+    try {
+      checkForAppUpdates();
+    } catch (e){
+      console.error(e);
+    }
   }
 });
 

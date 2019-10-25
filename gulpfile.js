@@ -20,7 +20,6 @@ const gulp = require('gulp');
 const $ = require('gulp-load-plugins')();
 const del = require('del');
 const merge = require('merge-stream');
-const runSequence = require('run-sequence');
 const electronPackager = require('electron-packager');
 const electronOsxSignAsync = require('electron-osx-sign').signAsync;
 const argv = require('yargs').argv;
@@ -92,15 +91,15 @@ gulp.task('clean', cb => {
 
 gulp.task('build', gulp.series('clean', 'styles', 'scripts', 'copy'));
 
-gulp.task('install-packages', gulp.series('build', $.shell.task([
+gulp.task('install-packages', gulp.series($.shell.task([
   'npm install --production'
 ], { cwd: 'build' })));
 
-gulp.task('run-electron', gulp.series('build', $.shell.task([
+gulp.task('run-electron', gulp.series($.shell.task([
   'electron ./build/ --dev'
 ])));
 
-gulp.task('dist', gulp.series('build', 'install-packages', async cb => {
+gulp.task('dist', gulp.series('build', 'install-packages', async () => {
   let packageInfo = require('./build/package.json');
   let appPaths = await electronPackager({
     arch: 'x64',
@@ -135,24 +134,27 @@ gulp.task('dist', gulp.series('build', 'install-packages', async cb => {
   // https://developer.apple.com/library/content/qa/qa1940/_index.html
   execSync(`xattr -cr "${appFilePath}"`);
 
-  plistStream.on('end', async () => {
-    // Sign the app
-    await electronOsxSignAsync({
-      app: appFilePath,
-      identity: 'Developer ID Application: Roman NURIK (NLACF347G7)',
-      platform: 'darwin'
-    });
+  await new Promise((resolve, reject) => {
+    plistStream.on('end', async () => {
+      // Sign the app
+      await electronOsxSignAsync({
+        app: appFilePath,
+        identity: 'Developer ID Application: Roman NURIK (NLACF347G7)',
+        platform: 'darwin'
+      });
 
-    // zip up the directory
-    console.log('Zipping up the package');
-    let zipStream = fs.createWriteStream(`./dist/${packageInfo.version}.zip`)
-        .on('error', err => { throw err })
-        .on('end', () => cb());
-    let archive = archiver('zip', {zlib: {level: 9}})
-    archive.pipe(zipStream);
-    archive.directory(appFilePath, `${packageInfo.appDisplayName}.app`);
-    archive.finalize();
+      // zip up the directory
+      console.log('Zipping up the package');
+      let zipStream = fs.createWriteStream(`./dist/${packageInfo.version}.zip`)
+          .on('warning', err => { throw err; })
+          .on('error', err => { throw err; })
+          .on('close', () => resolve());
+      let archive = archiver('zip', {zlib: {level: 9}})
+      archive.pipe(zipStream);
+      archive.directory(appFilePath, `${packageInfo.appDisplayName}.app`);
+      archive.finalize();
+    });
   });
 }));
 
-gulp.task('default', gulp.series('run-electron'));
+gulp.task('default', gulp.series('build', 'run-electron'));
