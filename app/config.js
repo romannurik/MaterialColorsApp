@@ -15,5 +15,5 @@
  */
 
 module.exports = {
-  UPDATE_FEED_URL: 'http://roman-update-service.appspot.com/s/check_updates'
+  UPDATE_FEED_URL: 'https://roman-update-service.appspot.com/s/check_updates'
 };

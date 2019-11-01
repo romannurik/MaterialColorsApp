@@ -3,7 +3,7 @@
   "appDisplayName": "Material Colors",
   "productName": "Material Colors",
   "appBundleId": "net.nurik.roman.materialcolors",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A quick color palette for material design colors.",
   "main": "main.js",
   "author": "Roman Nurik",
