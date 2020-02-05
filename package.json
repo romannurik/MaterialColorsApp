@@ -10,7 +10,8 @@
   "private": true,
   "scripts": {
     "start": "gulp",
-    "build": "gulp dist"
+    "build": "gulp dist",
+    "build_windows": "gulp windows"
   },
   "devDependencies": {
     "archiver": "^3.1.1",

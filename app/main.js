@@ -36,7 +36,7 @@ const UI_MODES = {
   NORMAL: 'normal'
 };
 
-let uiMode = null;
+let uiMode = IS_MAC ? null : UI_MODES.TRAY;
 let mainWindow;
 let mainWindowPositioner;
 let trayIcon;
@@ -245,9 +245,15 @@ function setupTray() {
     mainWindowPositioner.move('trayCenter', trayBounds);
   } else if (uiMode == UI_MODES.TRAY) {
     // click to be set later as part of menu setup
-    trayIcon.on('right-click', () => {
-      toggleVisibility();
-    });
+    if(IS_MAC) {
+      trayIcon.on('right-click', () => {
+        toggleVisibility();
+      });
+    } else {
+      trayIcon.on('click', () => {
+        toggleVisibility();
+      });
+    }
   }
 }
 
@@ -372,7 +378,7 @@ function setupMenus() {
 
 
 function readPrefs() {
-  uiMode = UI_MODES.NORMAL;
+  uiMode = IS_MAC ? UI_MODES.NORMAL : UI_MODES.TRAY;
   try {
     let prefStr = fs.readFileSync(app.getPath('userData') + '/prefs.json');
     if (prefStr) {
