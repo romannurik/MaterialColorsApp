@@ -90,9 +90,11 @@ app.on('activate', () => {
   }
 });
 
-systemPreferences.subscribeNotification(
-    'AppleInterfaceThemeChangedNotification',
-    () => updateMainWindowDarkMode());
+if(IS_MAC) {
+  systemPreferences.subscribeNotification(
+      'AppleInterfaceThemeChangedNotification',
+      () => updateMainWindowDarkMode());
+}
 
 electron.ipcMain.on('on-hide', () => eventBus.emit('show-hide'));
 
