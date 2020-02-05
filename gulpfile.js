@@ -157,4 +157,42 @@ gulp.task('dist', gulp.series('build', 'install-packages', async () => {
   });
 }));
 
+
+gulp.task('windows', gulp.series('build', 'install-packages', async () => {
+  let packageInfo = require('./build/package.json');
+  let appPaths = await electronPackager({
+    arch: 'x64',
+    dir: 'build',
+    out: 'dist',
+    asar: true,
+    platform: 'win32',
+    prune: false, // seems to be a bug where not just devDependencies but also dependencies is pruned
+                  // we don't need pruning anyway since we do npm install --production
+
+    appVersion: packageInfo.version,
+    icon: iconFile || 'icon.ico',
+    name: packageInfo.appDisplayName,
+    overwrite: true,
+  });
+
+  let appPath = appPaths[0];
+  if (!appPath) {
+    throw new Error('No app bundle was outputted by electron-packager');
+  }
+
+
+  await new Promise((resolve, reject) => {
+    // zip up the directory
+    console.log('Zipping up the package', appPath);
+    let zipStream = fs.createWriteStream(`./dist/${packageInfo.version}.zip`)
+        .on('warning', err => { throw err; })
+        .on('error', err => { throw err; })
+        .on('close', () => resolve());
+    let archive = archiver('zip', {zlib: {level: 9}})
+    archive.pipe(zipStream);
+    archive.directory(appPath, `/`);
+    archive.finalize();
+  });
+}));
+
 gulp.task('default', gulp.series('build', 'run-electron'));
