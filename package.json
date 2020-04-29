@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "electron-positioner": "^4.1.0",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "tinycolor2": "^1.4.1",
     "yargs": "^14.2.0"
   }
