@@ -19,8 +19,7 @@
 const $ = require('jquery');
 
 const electron = require('electron');
-const remote = electron.remote;
-const Menu = remote.Menu;
+const {Menu} = electron.remote;
 
 const tinycolor = require('tinycolor2');
 const fs = require('fs');
@@ -129,14 +128,14 @@ class MaterialColors {
 
     $(`.${this.CLASS_NAMES.closeButton}`)
         .toggle(!document.location.search.includes('uiMode=tray-attached'))
-        .click(() => {
+        .on('click', () => {
           electron.remote.getCurrentWindow().hide();
           electron.ipcRenderer.send('on-hide');
         });
 
     $(`.${this.CLASS_NAMES.menuButton}`)
         .toggle(document.location.search.includes('uiMode=tray-attached'))
-        .click(() => {
+        .on('click', () => {
           electron.ipcRenderer.send('show-overflow-menu');
         });
 
@@ -144,7 +143,7 @@ class MaterialColors {
       $('<div>')
           .addClass(this.CLASS_NAMES.updateBanner)
           .text(`Update to v${releaseName}`)
-          .click(() => electron.ipcRenderer.send('install-update'))
+          .on('click', () => electron.ipcRenderer.send('install-update'))
           .appendTo('body');
     });
 
@@ -166,7 +165,7 @@ class MaterialColors {
 
     let $searchButton = $('<div>')
         .addClass(`${this.CLASS_NAMES.searchButton}`)
-        .click(() => this._selectSearchMode())
+        .on('click', () => this._selectSearchMode())
         .appendTo(this.$sidebar);
 
     let $searchIcon = $('<div>')
@@ -196,7 +195,7 @@ class MaterialColors {
 
       let $hue = $('<div>')
           .addClass(`${this.CLASS_NAMES.hue} ${this.CLASS_NAMES.hue}-${hueName}`)
-          .click(() => this._selectHue(hueName))
+          .on('click', () => this._selectHue(hueName))
           .appendTo(this.$sidebar);
 
       let keyColor = this.isDarkMode
@@ -437,7 +436,7 @@ class MaterialColors {
         .concat(hexFormats.map(formatToMenuItemTemplate_))
         .concat([{type:'separator'}])
         .concat(valueFormats.map(formatToMenuItemTemplate_)));
-    menu.popup(remote.getCurrentWindow());
+    menu.popup(electron.remote.getCurrentWindow());
   }
 
   _buildValueTile(value, largeTile) {
@@ -471,7 +470,7 @@ class MaterialColors {
     let $hex = $('<div>')
         .addClass(this.CLASS_NAMES.colorTileHex)
         .text(value.hex.toUpperCase())
-        .click(() => {
+        .on('click', () => {
             electron.clipboard.writeText($hex.text());
             this._lastCopiedColor = $hex.text();
         })
@@ -484,7 +483,7 @@ class MaterialColors {
       $('<div>')
           .addClass(this.CLASS_NAMES.colorTileValueName)
           .text(value.name || value.valueName.toUpperCase())
-          .click(() => {
+          .on('click', () => {
             let valueCopyFormat = (this._config.copyFormats && this._config.copyFormats.length)
                 ? this._config.copyFormats[0]
                 : DEFAULT_VALUE_COPY_FORMAT;

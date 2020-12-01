@@ -26,6 +26,7 @@ const argv = require('yargs').argv;
 const fs = require('fs');
 const archiver = require('archiver');
 const {execSync} = require('child_process');
+const plist = require('gulp-plist').default;
 
 const colorsFile = argv.colorsFile;
 const packageInfoDeltaFile = argv.packageInfoDeltaFile;
@@ -125,7 +126,7 @@ gulp.task('dist', gulp.series('build', 'install-packages', async () => {
   // Modify plist to hide from Dock by default
   let appFilePath = `${appPath}/${packageInfo.appDisplayName}.app`;
   let plistStream = gulp.src(`${appFilePath}/Contents/Info.plist`)
-      .pipe($.plist({
+      .pipe(plist({
         NSUIElement: 1,
         CFBundleShortVersionString: ''
       }))

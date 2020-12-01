@@ -13,25 +13,25 @@
     "build": "gulp dist"
   },
   "devDependencies": {
-    "archiver": "^3.1.1",
-    "del": "^5.1.0",
-    "electron": "^6.0.12",
-    "electron-osx-sign": "^0.4.14",
-    "electron-packager": "^14.0.6",
+    "archiver": "^5.1.0",
+    "del": "^6.0.0",
+    "electron": "^11.0.3",
+    "electron-osx-sign": "^0.5.0",
+    "electron-packager": "^15.1.0",
     "gulp": "^4.0.2",
     "gulp-cache": "^1.1.3",
-    "gulp-cli": "^2.2.0",
-    "gulp-load-plugins": "^2.0.1",
-    "gulp-plist": "^0.1.0",
-    "gulp-rename": "^1.4.0",
-    "gulp-sass": "^4.0.2",
-    "gulp-shell": "^0.7.1",
+    "gulp-cli": "^2.3.0",
+    "gulp-load-plugins": "^2.0.6",
+    "gulp-plist": "^0.9.0",
+    "gulp-rename": "^2.0.0",
+    "gulp-sass": "^4.1.0",
+    "gulp-shell": "^0.8.0",
     "merge-stream": "^2.0.0"
   },
   "dependencies": {
     "electron-positioner": "^4.1.0",
-    "jquery": "^3.4.1",
-    "tinycolor2": "^1.4.1",
-    "yargs": "^14.2.0"
+    "jquery": "^3.5.1",
+    "tinycolor2": "^1.4.2",
+    "yargs": "^16.1.1"
   }
 }

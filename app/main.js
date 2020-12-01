@@ -17,11 +17,11 @@
 'use strict';
 
 const EventEmitter = require('events');
-const electron = require('electron');
 const electronPositioner = require('electron-positioner');
 const argv = require('yargs').argv;
 const fs = require('fs');
-const {app, autoUpdater, systemPreferences, Menu} = electron;
+const electron = require('electron');
+const {app, nativeTheme, autoUpdater, systemPreferences, Menu} = electron;
 
 const {UPDATE_FEED_URL} = require('./config');
 const DEV_MODE = argv.dev;
@@ -108,7 +108,7 @@ eventBus.on('show-hide', () => {
   setupMenus();
 
   if (trayIcon && uiMode == UI_MODES.TRAY_ATTACHED) {
-    trayIcon.setHighlightMode(isVisible() ? 'always' : 'never');
+    // trayIcon.setHighlightMode(isVisible() ? 'always' : 'never');
   }
 });
 
@@ -118,7 +118,7 @@ function updateMainWindowDarkMode() {
     return;
   }
 
-  let darkMode = systemPreferences.isDarkMode();
+  let darkMode = nativeTheme.shouldUseDarkColors;
   mainWindow.webContents.send('dark-mode-updated', darkMode);
   mainWindow.setBackgroundColor(darkMode ? '#3c3c3c' : '#fff');
 }
@@ -177,6 +177,8 @@ function setupMainWindow({firstRun}) {
       fullscreenable: false,
       frame: false,
       webPreferences: {
+        contextIsolation: false,
+        enableRemoteModule: true,
         nodeIntegration: true,
       }
     });
@@ -209,7 +211,7 @@ function setupMainWindow({firstRun}) {
     }
   }
 
-  let darkMode = systemPreferences.isDarkMode();
+  let darkMode = nativeTheme.shouldUseDarkColors;
   mainWindow.setAlwaysOnTop(uiMode == UI_MODES.TRAY || uiMode == UI_MODES.TRAY_ATTACHED);
   mainWindow.loadURL(`file://${__dirname}/index.html?uiMode=${uiMode}&darkMode=${darkMode}`);
   mainWindow.setMovable(uiMode != UI_MODES.TRAY_ATTACHED);
