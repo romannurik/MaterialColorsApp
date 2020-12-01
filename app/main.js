@@ -244,7 +244,9 @@ function setupTray() {
     let trayBounds = trayIcon.getBounds();
     mainWindowPositioner.move('trayCenter', trayBounds);
   } else if (uiMode == UI_MODES.TRAY) {
-    // click to be set later as part of menu setup
+    trayIcon.on('click', (evt, trayBounds) => {
+      trayIcon.popUpContextMenu(trayMenu);
+    });
     trayIcon.on('right-click', () => {
       toggleVisibility();
     });
@@ -340,9 +342,9 @@ function setupMenus() {
         openAtLoginMenuItem,
         ...(IS_MAC ? [aboutMacMenuItem] : []),
         quitMenuItem]);
-    if (uiMode == UI_MODES.TRAY) {
-      trayIcon.setContextMenu(trayMenu);
-    }
+    // if (uiMode == UI_MODES.TRAY) {
+    //   trayIcon.setContextMenu(trayMenu);
+    // }
   }
 
   if (IS_MAC) {
