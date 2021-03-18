@@ -1,11 +1,11 @@
-/*
- * Copyright 2019 Google Inc.
+/**
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-const SEPARATOR_MENU_ITEM = { type: 'separator' };
+export const SEPARATOR_MENU_ITEM = { type: 'separator' };
 
-const HELP_MENU = {
+export const HELP_MENU = {
   label: 'Help',
   role: 'help',
   submenu: []
@@ -24,7 +24,7 @@ const HELP_MENU = {
 
 // needed for Cmd+C, Cmd+V, etc. to work in text fields on mac
 // (https://github.com/electron/electron/issues/1718)
-const EDIT_MENU = {
+export const EDIT_MENU = {
   label: 'Edit',
   submenu: [
     {
@@ -61,7 +61,7 @@ const EDIT_MENU = {
   ]
 };
 
-const WINDOW_MENU = {
+export const WINDOW_MENU = {
   label: 'Window',
   submenu: [
     {
@@ -76,5 +76,3 @@ const WINDOW_MENU = {
     }
   ]
 };
-
-module.exports = {HELP_MENU, EDIT_MENU, WINDOW_MENU, SEPARATOR_MENU_ITEM};

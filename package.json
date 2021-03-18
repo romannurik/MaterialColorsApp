@@ -3,34 +3,58 @@
   "appDisplayName": "Material Colors",
   "productName": "Material Colors",
   "appBundleId": "net.nurik.roman.materialcolors",
-  "version": "2.0.1",
+  "version": "2.0.3",
   "description": "A quick color palette for material design colors.",
   "main": "main.js",
   "author": "Roman Nurik",
   "private": true,
   "scripts": {
-    "start": "gulp",
-    "build": "gulp dist"
+    "clean": "rm -rf build dist .electron-cache",
+    "start": "electron-webpack dev",
+    "dist": "electron-webpack && electron-builder && node ./scripts/make-mac-zip.js"
+  },
+  "build": {
+    "appId": "net.nurik.roman.materialcolors",
+    "mac": {
+      "target": "dir",
+      "category": "public.app-category.developer-tools"
+    }
+  },
+  "electronWebpack": {
+    "commonSourceDirectory": "src/common",
+    "staticSourceDirectory": "static",
+    "main": {
+      "sourceDirectory": "src/main",
+      "webpackConfig": "webpack.main.additions.js"
+    },
+    "renderer": {
+      "sourceDirectory": "src/ui",
+      "webpackConfig": "webpack.renderer.additions.js"
+    }
   },
   "devDependencies": {
-    "archiver": "^5.1.0",
-    "del": "^6.0.0",
+    "@babel/core": "^7.13.10",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/preset-react": "^7.12.13",
+    "@babel/register": "^7.13.8",
+    "archiver": "^5.3.0",
+    "css-loader": "5",
     "electron": "^11.0.3",
-    "electron-osx-sign": "^0.5.0",
-    "electron-packager": "^15.1.0",
-    "gulp": "^4.0.2",
-    "gulp-cache": "^1.1.3",
-    "gulp-cli": "^2.3.0",
-    "gulp-load-plugins": "^2.0.6",
-    "gulp-plist": "^0.9.0",
-    "gulp-rename": "^2.0.0",
-    "gulp-sass": "^4.1.0",
-    "gulp-shell": "^0.8.0",
-    "merge-stream": "^2.0.0"
+    "electron-builder": "^22.10.5",
+    "electron-webpack": "^2.8.2",
+    "node-sass": "^5.0.0",
+    "plist": "^3.0.1",
+    "regenerator-runtime": "^0.13.7",
+    "sass-loader": "10",
+    "webpack": "^4.46.0"
   },
   "dependencies": {
+    "classnames": "^2.2.6",
     "electron-positioner": "^4.1.0",
-    "jquery": "^3.5.1",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "source-map-support": "^0.5.19",
     "tinycolor2": "^1.4.2",
     "yargs": "^16.1.1"
   }

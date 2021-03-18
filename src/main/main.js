@@ -1,11 +1,11 @@
-/*
- * Copyright 2018 Google Inc.
+/**
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,21 +14,27 @@
  * limitations under the License.
  */
 
-'use strict';
+import { UPDATE_FEED_URL } from 'common/config';
+import { app, autoUpdater, BrowserWindow, ipcMain, Menu, nativeTheme, systemPreferences, Tray } from 'electron';
+import electronPositioner from 'electron-positioner';
+import EventEmitter from 'events';
+import fs from 'fs';
+import path from 'path';
+import { loadConfig } from './config-helper.js';
+import { EDIT_MENU, HELP_MENU, SEPARATOR_MENU_ITEM, WINDOW_MENU } from './standard-menus.js';
 
-const EventEmitter = require('events');
-const electronPositioner = require('electron-positioner');
-const argv = require('yargs').argv;
-const fs = require('fs');
-const electron = require('electron');
-const {app, nativeTheme, autoUpdater, systemPreferences, Menu} = electron;
-
-const {UPDATE_FEED_URL} = require('./config');
-const DEV_MODE = argv.dev;
+const DEV_MODE = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform == 'darwin';
 
-const COLORS = require('./colors.js');
+const config = loadConfig();
 
+let colorverse = require('@the-colors');
+if (config.extraColors) {
+  colorverse = {
+    ...config.extraColors,
+    ...colorverse,
+  };
+};
 
 const UI_MODES = {
   TRAY: 'tray',
@@ -62,21 +68,18 @@ app.on('ready', () => {
   openAtLogin = !!app.getLoginItemSettings().openAtLogin;
 
   readPrefs();
-  setupUiMode(uiMode, {firstRun: true});
+  setupUiMode(uiMode, { firstRun: true });
   if (!DEV_MODE) {
     try {
       checkForAppUpdates();
-    } catch (e){
+    } catch (e) {
       console.error(e);
     }
   }
 });
 
 
-app.on('window-all-closed', () => {
-  app.quit();
-});
-
+app.on('window-all-closed', () => app.quit());
 
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
@@ -91,17 +94,17 @@ app.on('activate', () => {
 });
 
 systemPreferences.subscribeNotification(
-    'AppleInterfaceThemeChangedNotification',
-    () => updateMainWindowDarkMode());
+  'AppleInterfaceThemeChangedNotification',
+  () => updateMainWindowDarkMode());
 
-electron.ipcMain.on('on-hide', () => eventBus.emit('show-hide'));
-
-electron.ipcMain.on('show-overflow-menu', () => {
-  trayMenu.popup();
+ipcMain.on('on-hide', () => eventBus.emit('show-hide'));
+ipcMain.on('show-overflow-menu', () => trayMenu.popup());
+ipcMain.on('get-config', event => event.returnValue = config);
+ipcMain.on('get-colorverse', event => event.returnValue = colorverse);
+ipcMain.on('set-height', (event, height) => {
+  mainWindow && mainWindow.setContentSize(mainWindow.getContentSize()[0], height, false);
+  event.returnValue = true;
 });
-
-
-electron.ipcMain.on('get-home-directory', event => event.returnValue = app.getPath('home'));
 
 
 eventBus.on('show-hide', () => {
@@ -124,13 +127,14 @@ function updateMainWindowDarkMode() {
 }
 
 
-function setupUiMode(newUiMode, {fromUser, firstRun} = {}) {
+function setupUiMode(newUiMode, { fromUser, firstRun } = {}) {
   uiMode = newUiMode;
 
-  setupMainWindow({firstRun});
+  setupMainWindow({ firstRun });
   setupTray();
   setupDock();
   setupMenus();
+  setupAbout();
 
   if (fromUser) {
     writePrefs();
@@ -138,39 +142,12 @@ function setupUiMode(newUiMode, {fromUser, firstRun} = {}) {
 }
 
 
-function computeMainWindowHeight() {
-  const SIDEBAR_VERT_PADDING = 8;
-  const SIDEBAR_HUE_MIN_HEIGHT = 22;
-  const SIDEBAR_SEARCH_MIN_HEIGHT = 22;
-  const SIDEBAR_SEPARATOR_HEIGHT = 17;
-
-  let numColors = Object.keys(COLORS).length;
-  let numSeparators = Object.values(COLORS).filter(({_startGroup}) => !!_startGroup).length;
-
-  let sidebarMinHeight = SIDEBAR_VERT_PADDING * 2 +
-      + SIDEBAR_SEARCH_MIN_HEIGHT
-      + SIDEBAR_HUE_MIN_HEIGHT * numColors
-      + SIDEBAR_SEPARATOR_HEIGHT * numSeparators;
-
-  const MAIN_VERT_PADDING = 12;
-  const HEADING_HEIGHT = 12 + 8; // with padding
-  const VALUE_HEIGHT = 32 + 2; // with padding
-  const NUM_VALUES = 14; // usually 14 total values
-
-  let mainMinHeight = MAIN_VERT_PADDING * 2
-      + HEADING_HEIGHT
-      + VALUE_HEIGHT * NUM_VALUES;
-
-  return Math.max(mainMinHeight, sidebarMinHeight);
-}
-
-
-function setupMainWindow({firstRun}) {
+function setupMainWindow({ firstRun }) {
   if (!mainWindow) {
-    mainWindow = new electron.BrowserWindow({
+    mainWindow = new BrowserWindow({
       transparent: true,
       width: 200,
-      height: computeMainWindowHeight(),
+      height: 400,
       resizable: false,
       skipTaskbar: true,
       maximizable: false,
@@ -213,8 +190,13 @@ function setupMainWindow({firstRun}) {
 
   let darkMode = nativeTheme.shouldUseDarkColors;
   mainWindow.setAlwaysOnTop(uiMode == UI_MODES.TRAY || uiMode == UI_MODES.TRAY_ATTACHED);
-  mainWindow.loadURL(`file://${__dirname}/index.html?uiMode=${uiMode}&darkMode=${darkMode}`);
   mainWindow.setMovable(uiMode != UI_MODES.TRAY_ATTACHED);
+  let qs = `?uiMode=${uiMode}&darkMode=${darkMode}`;
+  if (DEV_MODE) {
+    mainWindow.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}?${qs}`);
+  } else {
+    mainWindow.loadURL(`file://${__dirname}/index.html?${qs}`);
+  }
 }
 
 
@@ -229,7 +211,7 @@ function setupTray() {
     return;
   }
 
-  trayIcon = new electron.Tray(__dirname + '/assets/TrayIconTemplate.png');
+  trayIcon = new Tray(path.join(__static, 'TrayIconTemplate.png'));
   trayIcon.setToolTip(app.getName());
   if (uiMode == UI_MODES.TRAY_ATTACHED) {
     trayIcon.on('click', (evt, trayBounds) => {
@@ -272,8 +254,6 @@ function setupMenus() {
     return;
   }
 
-  const {HELP_MENU, EDIT_MENU, WINDOW_MENU, SEPARATOR_MENU_ITEM} = require('./standard-menus.js');
-
   const showHideMenuItem = {
     label: isVisible() ? 'Hide Colors' : 'Show Colors',
     accelerator: 'Command+H',
@@ -289,19 +269,19 @@ function setupMenus() {
         label: 'Normal',
         type: 'checkbox',
         checked: uiMode == UI_MODES.NORMAL,
-        click: () => setupUiMode(UI_MODES.NORMAL, {fromUser: true}),
+        click: () => setupUiMode(UI_MODES.NORMAL, { fromUser: true }),
       },
       {
         label: 'Menu Bar',
         type: 'checkbox',
         checked: uiMode == UI_MODES.TRAY,
-        click: () => setupUiMode(UI_MODES.TRAY, {fromUser: true}),
+        click: () => setupUiMode(UI_MODES.TRAY, { fromUser: true }),
       },
       {
         label: 'Menu Bar (Attached)',
         type: 'checkbox',
         checked: uiMode == UI_MODES.TRAY_ATTACHED,
-        click: () => setupUiMode(UI_MODES.TRAY_ATTACHED, {fromUser: true}),
+        click: () => setupUiMode(UI_MODES.TRAY_ATTACHED, { fromUser: true }),
       },
     ]
   };
@@ -333,15 +313,15 @@ function setupMenus() {
     accelerator: 'Command+Q',
     click: () => app.quit(),
   };
-  
+
   if (uiMode == UI_MODES.TRAY || uiMode == UI_MODES.TRAY_ATTACHED) {
     trayMenu = Menu.buildFromTemplate([
-        showHideMenuItem,
-        ...(IS_MAC ? [switchModeMacMenuItem] : []),
-        SEPARATOR_MENU_ITEM,
-        openAtLoginMenuItem,
-        ...(IS_MAC ? [aboutMacMenuItem] : []),
-        quitMenuItem]);
+      showHideMenuItem,
+      ...(IS_MAC ? [switchModeMacMenuItem] : []),
+      SEPARATOR_MENU_ITEM,
+      openAtLoginMenuItem,
+      ...(IS_MAC ? [aboutMacMenuItem] : []),
+      quitMenuItem]);
     // if (uiMode == UI_MODES.TRAY) {
     //   trayIcon.setContextMenu(trayMenu);
     // }
@@ -355,21 +335,29 @@ function setupMenus() {
 
     // build the app menu
     Menu.setApplicationMenu(Menu.buildFromTemplate([
-        {
-          label: 'app', // automatically set to title
-          submenu: [
-            showHideMenuItem,
-            switchModeMacMenuItem,
-            SEPARATOR_MENU_ITEM,
-            openAtLoginMenuItem,
-            aboutMacMenuItem,
-            quitMenuItem
-          ]
-        },
-        EDIT_MENU,
-        WINDOW_MENU,
-        HELP_MENU]));
+      {
+        label: 'app', // automatically set to title
+        submenu: [
+          showHideMenuItem,
+          switchModeMacMenuItem,
+          SEPARATOR_MENU_ITEM,
+          openAtLoginMenuItem,
+          aboutMacMenuItem,
+          quitMenuItem
+        ]
+      },
+      EDIT_MENU,
+      WINDOW_MENU,
+      HELP_MENU]));
   }
+}
+
+
+function setupAbout() {
+  app.setAboutPanelOptions({
+    copyright: 'Copyright 2021 Google LLC',
+    credits: 'by Roman Nurik',
+  });
 }
 
 
@@ -384,7 +372,7 @@ function readPrefs() {
         uiMode = prefs.isTrayMode ? UI_MODES.TRAY : UI_MODES.NORMAL;
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 
@@ -396,7 +384,7 @@ function writePrefs() {
 
 
 function checkForAppUpdates() {
-  let packageInfo = require('./package.json');
+  let packageInfo = require('@/package.json');
 
   let query = {
     version: app.getVersion(),
@@ -404,13 +392,13 @@ function checkForAppUpdates() {
   };
 
   let qs = Object.keys(query)
-      .map(k => k + '=' + encodeURIComponent(query[k]))
-      .join('&');
+    .map(k => k + '=' + encodeURIComponent(query[k]))
+    .join('&');
 
   autoUpdater.setFeedURL(UPDATE_FEED_URL + '?' + qs);
   autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName, releaseDate, updateURL) => {
     mainWindow.webContents.send('update-downloaded', releaseName);
-    electron.ipcMain.on('install-update', () => autoUpdater.quitAndInstall());
+    ipcMain.on('install-update', () => autoUpdater.quitAndInstall());
   });
   autoUpdater.on('error', error => {
     console.error('Error updating: ' + error);

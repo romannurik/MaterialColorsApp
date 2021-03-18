@@ -1,0 +1,152 @@
+/**
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import 'shared';
+
+.sidebar {
+  grid-area: sidebar;
+  width: $sidebarWidth;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 1px 0 0 var(--theme-color-thin-border);
+  z-index: 2;
+}
+
+.separator {
+  margin: 8px 0;
+  height: 1px;
+  background-color: var(--theme-color-thin-border);
+  flex: 0 0 auto;
+}
+
+.sidebar button {
+  appearance: none;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  position: relative;
+  outline: 0;
+  flex: 0 0 auto;
+  height: 24px;
+  cursor: pointer;
+  @include nodrag;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover .tooltip {
+    display: block;
+  }
+}
+
+.tooltip {
+  pointer-events: none;
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(16px, -50%);
+  background-color: var(--theme-color-tooltip-bg);
+  color: var(--theme-color-tooltip-text);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  border-radius: 2px;
+  padding: 4px 8px;
+  z-index: 2;
+
+  &::before {
+    content: '';
+    display: block;
+    box-sizing: border-box;
+    width: 8px;
+    height: 8px;
+    border: 4px solid transparent;
+    border-right-color: var(--theme-color-tooltip-bg);
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    margin-top: -4px;
+  }
+}
+
+.search-button {
+  .search-icon {
+    fill: var(--theme-color-on-tertiary);
+    width: 20px;
+    height: 20px;
+    transition: fill $animTimeVeryFast ease;
+    display: flex;
+  }
+
+  &.is-selected .search-icon {
+    fill: var(--theme-color-on-primary);
+  }
+
+  &.is-selected .tooltip {
+    display: none;
+  }
+}
+
+.hue-icon {
+  position: relative;
+  width: $hueIconWidth;
+  height: $hueIconWidth;
+  border-radius: 50%;
+}
+
+.ring {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  z-index: -1;
+  transform: scale(.6);
+  transition: transform $animTimeVeryFast ease;
+
+  &::after {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    right: 2px;
+    bottom: 2px;
+    content: '';
+    border-radius: 50%;
+    background-color: var(--theme-color-bg);
+  }
+
+  .hue.is-selected & {
+    transform: scale(1);
+  }
+}
+
+.namespace {
+  font-family: $fontStackSansSerif;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-color-on-tertiary);
+  transition: color $animTimeVeryFast ease;
+
+  &.is-selected {
+    color: var(--theme-color-on-primary);
+  }
+}

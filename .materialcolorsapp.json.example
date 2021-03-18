@@ -14,36 +14,43 @@
     }
   ],
   "extraColors": {
-    "brand": {
-      "_selectorDark": "#1A73E8",
-      "_selectorLight": "#1967D2",
-      "_groups": [
-        {
-          "title": "Primary",
-          "colors": [
-            { "name": "Default", "hex": "#1A73E8" },
-            { "name": "Dark", "hex": "#1967D2" }
+    "my-colors": {
+      "shorthand": "🏈",
+      "label": "My colors",
+      "pinned": false,
+      "colors": {
+        "brand": {
+          "_selectorDark": "#1A73E8",
+          "_selectorLight": "#1967D2",
+          "_groups": [
+            {
+              "title": "Primary",
+              "colors": [
+                { "name": "Default", "hex": "#1A73E8" },
+                { "name": "Dark", "hex": "#1967D2" }
+              ]
+            }
           ]
+        },
+        "navy": {
+          "_selectorDark": "#6B829D",
+          "_selectorLight": "#476282",
+          "10": {"hex": "#F6F7F9"},
+          "20": {"hex": "#E5EAF0"},
+          "30": {"hex": "#D4DCE7"},
+          "40": {"hex": "#C3CFDD"},
+          "50": {"hex": "#B2C1D4"},
+          "100": {"hex": "#8EA1B9"},
+          "200": {"hex": "#6B829D"},
+          "300": {"hex": "#476282"},
+          "400": {"hex": "#385574"},
+          "500": {"hex": "#2A4865"},
+          "600": {"hex": "#1B3A57"},
+          "700": {"hex": "#0C2D48"},
+          "800": {"hex": "#051E34"},
+          "900": {"hex": "#031525"}
         }
-      ]
-    },
-    "navy": {
-      "_selectorDark": "#6B829D",
-      "_selectorLight": "#476282",
-      "10": {"hex": "#F6F7F9"},
-      "20": {"hex": "#E5EAF0"},
-      "30": {"hex": "#D4DCE7"},
-      "40": {"hex": "#C3CFDD"},
-      "50": {"hex": "#B2C1D4"},
-      "100": {"hex": "#8EA1B9"},
-      "200": {"hex": "#6B829D"},
-      "300": {"hex": "#476282"},
-      "400": {"hex": "#385574"},
-      "500": {"hex": "#2A4865"},
-      "600": {"hex": "#1B3A57"},
-      "700": {"hex": "#0C2D48"},
-      "800": {"hex": "#051E34"},
-      "900": {"hex": "#031525"}
+      }
     }
   }
 }

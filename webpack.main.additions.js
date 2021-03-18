@@ -1,11 +1,11 @@
-/*
- * Copyright 2019 Google Inc.
+/**
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-@mixin nodrag {
-  &,
-  & * {
-    -webkit-app-region: no-drag;
-  }
-}
+const path = require('path');
 
-@mixin draggable {
-  &,
-  & * {
-    -webkit-app-region: drag;
-  }
-}
+module.exports = config => {
+  config.resolve.alias['@'] = process.env.AT_ROOT || path.resolve(__dirname);
+  config.resolve.alias['@the-colors'] = process.env.COLORS_JS_FILE
+    || path.resolve(__dirname, 'src/common/colors.js');
+
+  return config;
+};
