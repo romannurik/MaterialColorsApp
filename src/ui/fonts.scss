@@ -18,14 +18,8 @@
   @font-face {
     font-family: 'Roboto Mono';
     font-style: normal;
-    font-weight: 400;
-    src: url('~static/RobotoMono400.ttf') format('truetype');
-  }
-
-  @font-face {
-    font-family: 'Roboto Mono';
-    font-style: normal;
-    font-weight: 500;
-    src: url('~static/RobotoMono500.ttf') format('truetype');
+    font-weight: 100 700;
+    font-display: block;
+    src: url('~static/RobotoMono18.woff2') format('woff2');
   }
 }
