@@ -55,11 +55,27 @@ body {
 .close-button,
 .menu-button {
   position: absolute;
-  right: 12px;
-  top: 8px;
+  right: 8px;
+  top: 4px;
   z-index: 100;
+  padding: 4px;
+  display: flex;
   cursor: pointer;
   @include nodrag;
+
+  &::before {
+    position: absolute;
+    content: '';
+    background-color: var(--theme-color-bg);
+    border-radius: 50%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    z-index: -1;
+    pointer-events: none;
+  }
 
   svg {
     fill: var(--theme-color-on-tertiary);
@@ -103,19 +119,6 @@ body {
   &::placeholder {
     color: var(--theme-color-on-tertiary);
   }
-}
-
-.search-help-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1 1 0;
-  text-align: center;
-  font-size: 12px;
-  color: var(--theme-color-on-tertiary);
-  padding: 0 10px;
-  line-height: 16px;
 }
 
 .content-area {
@@ -231,7 +234,10 @@ body {
 
 .color-tile.is-large {
   height: 88px;
-  margin-bottom: 8px;
+
+  &:not(:last-child) {
+    margin-bottom: 8px;
+  }
 
   .color-tile-hue-name,
   .color-tile-alpha {
@@ -294,10 +300,11 @@ body {
 
 .color-tile-hex {
   font-family: $fontStackMono;
+  font-weight: 400;
 }
 
 .update-banner {
-  grid-area: update-banner;;
+  grid-area: update-banner;
   cursor: pointer;
   padding: 8px 12px;
   font-size: 12px;
@@ -316,23 +323,29 @@ body {
   }
 }
 
-.not-found-icon {
-  text-align: center;
-  margin-top: 128px;
-
-  svg {
-    fill: var(--theme-color-on-tertiary);
-    margin: 0 auto;
-    height: 40px;
-    width: 40px;
-  }
+.search-results-empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin-top: 24px;
 }
 
-.not-found-label {
+.search-results-empty-icon {
   text-align: center;
+  fill: var(--theme-color-on-tertiary);
+  margin-bottom: 8px;
+  height: 40px;
+  width: 40px;
+}
+
+.search-results-empty-text {
+  color: var(--theme-color-on-secondary);
+  margin: 0;
   font-size: 10px;
   line-height: 16px;
-  color: var(--theme-color-on-secondary);
+  text-align: center;
 }
 
 .matching-material-label {

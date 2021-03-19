@@ -21,14 +21,14 @@ import ReactDOM from 'react-dom';
 import tinycolor from 'tinycolor2';
 import styles from './app.module.scss';
 import { renderCustomColorFormatString } from './color-formatting';
-import { Sidebar } from './sidebar';
-
+import { CancelIcon, MoreVertIcon, SearchIcon, UnknownIcon } from './icons';
 import {
   getCloseSearchableValues,
   getSearchableValuesByHex,
   prepareSearchableValues
 } from './search-util';
-import { CancelIcon, MoreVertIcon } from './icons';
+import { Sidebar } from './sidebar';
+
 
 const { Menu } = remote;
 
@@ -71,13 +71,13 @@ class App extends React.Component {
 
   resize = async () => {
     await new Promise(resolve => setTimeout(resolve));
+    let sb = this.sidebarRef.current;
+    let ca = this.contentRef.current;
 
-    if (!this.sidebarRef.current || !this.contentRef.current) {
+    if (!sb || !ca) {
       return;
     }
 
-    let sb = this.sidebarRef.current;
-    let ca = this.contentRef.current;
     let sidebarHeight = sb.children[sb.children.length - 1].getBoundingClientRect().bottom
       + parseInt(window.getComputedStyle(sb).paddingBottom);
     let contentHeight = ca.children[ca.children.length - 1].getBoundingClientRect().bottom
@@ -205,7 +205,7 @@ function SearchView({ inboundSearchText }) {
       value={searchText}
       onInput={ev => setSearchText(ev.currentTarget.value)}
       placeholder="Color code or name" />
-    {searchText && <div className={styles.searchResults}>
+    {searchText && <>
       {searchResults && searchResults.map(value =>
         <ValueTile large key={`${value.name},${value.hex}`} value={value} />)}
       {similarResults && <>
@@ -213,21 +213,19 @@ function SearchView({ inboundSearchText }) {
         {similarResults.map(value =>
           <ValueTile large key={`${value.name},${value.hex}`} value={value} />)}
       </>}
-      {!searchResults && <>
-        <div className={styles.notFoundIcon}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
-            <path d="M0 0h24v24H0z" fill="none" />
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-          </svg>
-        </div>
-        <div className={styles.notFoundLabel}>Unknown color</div>
-      </>}
-    </div>}
-    {!searchText &&
-      <div className={styles.searchHelpText}>
-        Search by color name or hex value.
-        Copy a color to the clipboard to find its name.
+      {!searchResults && <div className={styles.searchResultsEmptyContainer}>
+        <UnknownIcon className={styles.searchResultsEmptyIcon} />
+        <p className={styles.searchResultsEmptyText}>
+          No colors found
+        </p>
       </div>}
+    </>}
+    {!searchText && <div className={styles.searchResultsEmptyContainer}>
+      <SearchIcon className={styles.searchResultsEmptyIcon} />
+      <p className={styles.searchResultsEmptyText}>
+        Search by name or hex. Copy a color to the clipboard to find its name.
+      </p>
+    </div>}
   </>;
 }
 

@@ -30,3 +30,8 @@ export const MoreVertIcon = ({ className }) =>
   <svg className={className} width="24" height="24" viewBox="0 0 24 24">
     <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
   </svg>;
+
+export const UnknownIcon = ({ className }) =>
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24">
+    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm-4-7h8v-2H8v2z"/>
+  </svg>;

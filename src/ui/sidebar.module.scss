@@ -96,6 +96,14 @@
     display: flex;
   }
 
+  &:hover .search-icon {
+    fill: var(--theme-color-on-secondary);
+  }
+
+  &:active .search-icon {
+    fill: var(--theme-color-on-primary);
+  }
+
   &.is-selected .search-icon {
     fill: var(--theme-color-on-primary);
   }
