@@ -25,15 +25,15 @@ export function loadConfig() {
   const configFilePath = path.join(app.getPath('home'), CONFIG_FILENAME);
 
   try {
-    let data = fs.readFileSync(configFilePath);
+    let data = fs.existsSync(configFilePath) && fs.readFileSync(configFilePath);
     if (!data) {
-      return;
+      return {};
     }
 
     return JSON.parse(data);
 
   } catch (e) {
-    console.warn('Error reading config file.', e);
+    console.error('Error reading config file.', e);
     return {};
   }
 }
