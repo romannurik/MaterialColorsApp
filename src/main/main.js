@@ -15,7 +15,7 @@
  */
 
 import { UPDATE_FEED_URL } from 'common/config';
-import { app, autoUpdater, BrowserWindow, ipcMain, Menu, nativeTheme, systemPreferences, Tray } from 'electron';
+import { app, autoUpdater, BrowserWindow, ipcMain, Menu, nativeTheme, Tray } from 'electron';
 import electronPositioner from 'electron-positioner';
 import EventEmitter from 'events';
 import fs from 'fs';
@@ -93,9 +93,7 @@ app.on('activate', () => {
   }
 });
 
-systemPreferences.subscribeNotification(
-  'AppleInterfaceThemeChangedNotification',
-  () => updateMainWindowDarkMode());
+nativeTheme.on('updated', () => updateMainWindowDarkMode());
 
 ipcMain.on('on-hide', () => eventBus.emit('show-hide'));
 ipcMain.on('show-overflow-menu', () => trayMenu.popup());
