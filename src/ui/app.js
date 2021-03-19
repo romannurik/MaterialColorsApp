@@ -43,7 +43,7 @@ export const colorverse = ipcRenderer.sendSync('get-colorverse');
 
 export const GlobalContext = React.createContext({});
 
-let lastCopiedColor = null;
+let skipSearchClipboardColor = null;
 
 const defaultNamespace = Object.keys(colorverse)[0];
 
@@ -109,13 +109,21 @@ class App extends React.Component {
     window.addEventListener('keydown', toggleHash);
     window.addEventListener('keyup', toggleHash);
     window.addEventListener('focus', () => {
-      let clipboardText = searchColorFromClipboard(lastCopiedColor);
-      if (clipboardText) {
-        this.setState({
-          selectedView: { type: 'search' },
-          clipboardText
-        });
+      let clipboardText = electron.clipboard.readText();
+      if (clipboardText === skipSearchClipboardColor) {
+        return;
       }
+    
+      // never focus search from this clipboard text again
+      skipSearchClipboardColor = clipboardText;
+      if (!tinycolor(clipboardText).isValid()) {
+        return;
+      }
+
+      this.setState({
+        selectedView: { type: 'search' },
+        clipboardText
+      });
     });
   }
 
@@ -289,7 +297,7 @@ function ValueTile({ value, large }) {
     <div className={styles.colorTileHex}
       onClick={() => {
         electron.clipboard.writeText(hexText);
-        lastCopiedColor = hexText;
+        skipSearchClipboardColor = hexText;
       }}>
       {hexText}
     </div>
@@ -307,7 +315,7 @@ function ValueTile({ value, large }) {
             alpha: value.alpha,
           });
           electron.clipboard.writeText(copyText);
-          lastCopiedColor = copyText;
+          skipSearchClipboardColor = copyText;
         }}>
         {value.name || value.valueName.toUpperCase()}
       </div>}
@@ -339,7 +347,7 @@ function showValueContextMenu(hexValue, hueName, groupName, valueName, alpha) {
     label: `Copy ${format}`,
     click: () => {
       electron.clipboard.writeText(format);
-      lastCopiedColor = format;
+      skipSearchClipboardColor = format;
     }
   });
 
@@ -379,21 +387,6 @@ function showValueContextMenu(hexValue, hueName, groupName, valueName, alpha) {
 
   Menu.buildFromTemplate(menuTemplate)
     .popup(electron.remote.getCurrentWindow());
-}
-
-function searchColorFromClipboard(lastCopiedColor) {
-  let clipboardText = electron.clipboard.readText();
-
-  // if not previously copied from app itself.
-  if (clipboardText === lastCopiedColor) {
-    return;
-  }
-
-  lastCopiedColor = clipboardText;
-
-  if (tinycolor(clipboardText).isValid()) {
-    return clipboardText;
-  }
 }
 
 ReactDOM.render(<App />, document.getElementById('app'));
