@@ -38,6 +38,7 @@ body.is-dark-mode {
 * {
   -webkit-app-region: drag;
   -webkit-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -60,7 +61,7 @@ body {
   z-index: 100;
   padding: 4px;
   display: flex;
-  cursor: pointer;
+  cursor: default;
   @include nodrag;
 
   &::before {
@@ -81,6 +82,10 @@ body {
     fill: var(--theme-color-on-tertiary);
     width: 16px;
     height: 16px;
+
+    :global(.window-blurred) & {
+      opacity: .5;
+    }  
   }
 
   &:hover {
@@ -168,6 +173,10 @@ body {
   font-weight: 500;
   color: var(--theme-color-on-secondary);
   margin-bottom: 8px;
+
+  :global(.window-blurred) & {
+    opacity: .5;
+  }
 }
 
 .value-group {
@@ -187,6 +196,10 @@ body {
   font-weight: 500;
   color: var(--theme-color-on-secondary);
   margin-bottom: 8px;
+
+  :global(.window-blurred) & {
+    opacity: .5;
+  }
 }
 
 .color-tile {
@@ -213,6 +226,10 @@ body {
   .color-tile-alpha {
     position: absolute;
     display: inline-block;
+
+    :global(.window-blurred) & {
+      opacity: .5;
+    }
   }
 
   .color-tile-hex,
@@ -257,7 +274,7 @@ body {
   font-size: 12px;
   font-weight: 500;
   line-height: 16px;
-  cursor: pointer;
+  cursor: default;
   @include nodrag;
 }
 
@@ -276,7 +293,7 @@ body {
   font-size: 10px;
   font-weight: 500;
   line-height: 16px;
-  cursor: pointer;
+  cursor: default;
   padding: 0 2px;
   border-radius: 2px;
   @include nodrag;
@@ -305,7 +322,7 @@ body {
 
 .update-banner {
   grid-area: update-banner;
-  cursor: pointer;
+  cursor: default;
   padding: 8px 12px;
   font-size: 12px;
   line-height: 16px;
@@ -330,6 +347,10 @@ body {
   justify-content: center;
   box-sizing: border-box;
   margin-top: 24px;
+
+  :global(.window-blurred) & {
+    opacity: .5;
+  }
 }
 
 .search-results-empty-icon {

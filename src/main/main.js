@@ -122,6 +122,12 @@ function updateMainWindowDarkMode() {
   let darkMode = nativeTheme.shouldUseDarkColors;
   mainWindow.webContents.send('dark-mode-updated', darkMode);
   mainWindow.setBackgroundColor(darkMode ? '#3c3c3c' : '#fff');
+
+  // if (IS_MAC) {
+  //   app.dock.setIcon(__static + (darkMode
+  //     ? '/icon-dark.png'
+  //     : '/icon-light.png'));
+  // }
 }
 
 
@@ -171,7 +177,15 @@ function setupMainWindow({ firstRun }) {
 
     mainWindow.on('show', () => eventBus.emit('show-hide'));
     mainWindow.on('hide', () => eventBus.emit('show-hide'));
+    mainWindow.on('focus', () => {
+      if (uiMode == UI_MODES.NORMAL) {
+        mainWindow.webContents.send('focus');
+      }
+    });
     mainWindow.on('blur', () => {
+      if (uiMode == UI_MODES.NORMAL) {
+        mainWindow.webContents.send('blur');
+      }
       if (uiMode == UI_MODES.TRAY_ATTACHED) {
         toggleVisibility(false)
       }

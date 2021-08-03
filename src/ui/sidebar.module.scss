@@ -43,7 +43,7 @@
   outline: 0;
   flex: 0 0 auto;
   height: 24px;
-  cursor: pointer;
+  cursor: default;
   @include nodrag;
 
   display: flex;
@@ -52,6 +52,10 @@
 
   &:hover .tooltip {
     display: block;
+  }
+
+  :global(.window-blurred) & {
+    opacity: .5;
   }
 }
 
@@ -148,13 +152,24 @@
 }
 
 .namespace {
-  font-family: $fontStackSansSerif;
-  font-size: 12px;
-  line-height: 16px;
   color: var(--theme-color-on-tertiary);
+  fill: currentColor;
   transition: color $animTimeVeryFast ease;
 
   &.is-selected {
     color: var(--theme-color-on-primary);
   }
+}
+
+.namespace-icon {
+  display: flex;
+  width: 16px;
+  height: 16px;
+}
+
+.namespace-shorthand {
+  font-family: $fontStackSansSerif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
 }

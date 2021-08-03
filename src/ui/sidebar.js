@@ -55,7 +55,9 @@ export const Sidebar = forwardRef((props, ref) => {
           [styles.isSelected]: activeNamespace === namespace
         })}
         onClick={() => setActiveNamespace(namespace)}>
-        <div className={styles.namespaceShorthand}>{shorthand}</div>
+          {shorthand.startsWith('svgpath:')
+            ? <svg className={styles.namespaceIcon} width="24" height="24" viewBox="0 0 24 24"><path d={shorthand.replace(/^svgpath:/, '')} /></svg>
+            : <div className={styles.namespaceShorthand}>{shorthand}</div>}
         <div className={styles.tooltip}>{label}</div>
       </button>)}
     {/* Active unpinned namespace */}

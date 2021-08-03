@@ -95,10 +95,22 @@ class App extends React.Component {
       this.setState({ isDarkMode });
     };
 
+    const setWindowFocused = isWindowFocused => {
+      document.body.classList.toggle('window-blurred', !isWindowFocused);
+    };
+
     setIsDarkMode(!!document.location.search.includes('darkMode=true'));
 
     electron.ipcRenderer.on('dark-mode-updated', (event, isDarkMode) => {
       setIsDarkMode(isDarkMode);
+    });
+
+    electron.ipcRenderer.on('focus', () => {
+      setWindowFocused(true);
+    });
+
+    electron.ipcRenderer.on('blur', () => {
+      setWindowFocused(false);
     });
 
     electron.ipcRenderer.on('update-downloaded', (event, releaseName) => {
