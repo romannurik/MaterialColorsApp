@@ -44,7 +44,7 @@
     "electron-builder": "^22.10.5",
     "electron-webpack": "^2.8.2",
     "node-sass": "^5.0.0",
-    "plist": "^3.0.1",
+    "plist": "^3.0.4",
     "regenerator-runtime": "^0.13.7",
     "sass-loader": "10",
     "webpack": "^4.46.0"
